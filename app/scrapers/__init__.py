@@ -23,6 +23,11 @@ from .spiceworks import SpiceworksScraper
 from .discourse import DiscourseScraper
 from .atlassian import AtlassianScraper
 from .apple import AppleScraper
+from .cloud_forums import CloudForumsScraper
+from .complaints import ComplaintsScraper
+from .more_freelance import MoreFreelanceScraper
+from .saas_vendors import SaaSVendorScraper
+from .marketing_forums import MarketingForumsScraper
 from .enricher import enrich_post
 
 ALL_SCRAPERS = [
@@ -37,10 +42,11 @@ ALL_SCRAPERS = [
     MicrosoftCommunityScraper,
     StackOverflowScraper,
     AtlassianScraper,
-    # Review sites
+    # Review / complaint sites
     TrustpilotScraper,
     G2ReviewScraper,
     CapterraScraper,
+    ComplaintsScraper,
     # Community / Q&A
     IndieHackersScraper,
     QuoraScraper,
@@ -49,14 +55,20 @@ ALL_SCRAPERS = [
     # CMS / eCommerce
     WordPressScraper,
     ShopifyScraper,
-    # SaaS / No-code communities
+    # SaaS / No-code / vendor communities
     DiscourseScraper,
     SpiceworksScraper,
     AppleScraper,
+    SaaSVendorScraper,
+    # Cloud / hosting
+    CloudForumsScraper,
+    # Marketing / SEO
+    MarketingForumsScraper,
     # Freelance / gigs
     UpworkScraper,
     CraigslistScraper,
     FreelancerScraper,
+    MoreFreelanceScraper,
     # Social media search
     SocialMediaScraper,
 ]

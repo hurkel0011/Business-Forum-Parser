@@ -26,6 +26,11 @@ from ..scrapers.spiceworks import SpiceworksScraper
 from ..scrapers.discourse import DiscourseScraper
 from ..scrapers.atlassian import AtlassianScraper
 from ..scrapers.apple import AppleScraper
+from ..scrapers.cloud_forums import CloudForumsScraper
+from ..scrapers.complaints import ComplaintsScraper
+from ..scrapers.more_freelance import MoreFreelanceScraper
+from ..scrapers.saas_vendors import SaaSVendorScraper
+from ..scrapers.marketing_forums import MarketingForumsScraper
 from ..scrapers.enricher import enrich_post
 from ..prescorer import batch_prescore
 from ..classifier import LeadClassifier
@@ -50,7 +55,7 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(
-            sources_frame, text="25 Sources — Engines, Forums, Reviews, Freelance, SaaS, Social",
+            sources_frame, text="30 Sources — Engines, Forums, Reviews, Freelance, SaaS, Cloud, Social",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
@@ -58,11 +63,12 @@ class ScraperFrame(ctk.CTkFrame):
         sources_rows = [
             [("ddg", "DuckDuckGo"), ("bing", "Bing / Edge"), ("google", "Google"), ("brave", "Brave Search")],
             [("github", "GitHub Issues"), ("hackernews", "Hacker News"), ("stackoverflow", "Stack Overflow"), ("microsoft", "Microsoft")],
-            [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("capterra", "Capterra"), ("indiehackers", "IndieHackers")],
-            [("quora", "Quora"), ("producthunt", "Product Hunt"), ("devto", "Dev.to"), ("atlassian", "Atlassian")],
-            [("wordpress", "WordPress Forums"), ("shopify", "Shopify Community"), ("discourse", "SaaS Communities"), ("spiceworks", "Spiceworks IT")],
-            [("upwork", "Upwork Jobs"), ("craigslist", "Craigslist Gigs"), ("freelancer", "Freelancer.com"), ("apple", "Apple Forums")],
-            [("social", "Social Media (FB/LinkedIn/X/Reddit)")],
+            [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("capterra", "Capterra"), ("complaints", "BBB/Sitejabber/PissedConsumer")],
+            [("indiehackers", "IndieHackers"), ("quora", "Quora"), ("producthunt", "Product Hunt"), ("devto", "Dev.to")],
+            [("wordpress", "WordPress Forums"), ("shopify", "Shopify Community"), ("atlassian", "Atlassian"), ("apple", "Apple Forums")],
+            [("discourse", "SaaS Communities"), ("spiceworks", "Spiceworks IT"), ("saas_vendors", "Salesforce/HubSpot/Zendesk"), ("cloud", "Cloud (DO/CF/AWS)")],
+            [("marketing", "SEO/Marketing Forums"), ("upwork", "Upwork Jobs"), ("craigslist", "Craigslist Gigs"), ("freelancer", "Freelancer.com")],
+            [("more_freelance", "Fiverr/PeoplePerHour/Guru"), ("social", "Social Media (FB/LinkedIn/X/Reddit)")],
         ]
 
         for row_idx, row_sources in enumerate(sources_rows):
@@ -100,7 +106,7 @@ class ScraperFrame(ctk.CTkFrame):
         # Scrape button
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 25 Sources",
+            text="Start Scraping — 30 Sources",
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -156,19 +162,24 @@ class ScraperFrame(ctk.CTkFrame):
                 "trustpilot": TrustpilotScraper(),
                 "g2": G2ReviewScraper(),
                 "capterra": CapterraScraper(),
+                "complaints": ComplaintsScraper(),
                 "indiehackers": IndieHackersScraper(),
                 "quora": QuoraScraper(),
                 "producthunt": ProductHuntScraper(),
                 "devto": DevToScraper(),
-                "atlassian": AtlassianScraper(),
                 "wordpress": WordPressScraper(),
                 "shopify": ShopifyScraper(),
+                "atlassian": AtlassianScraper(),
+                "apple": AppleScraper(),
                 "discourse": DiscourseScraper(),
                 "spiceworks": SpiceworksScraper(),
+                "saas_vendors": SaaSVendorScraper(),
+                "cloud": CloudForumsScraper(),
+                "marketing": MarketingForumsScraper(),
                 "upwork": UpworkScraper(),
                 "craigslist": CraigslistScraper(),
                 "freelancer": FreelancerScraper(),
-                "apple": AppleScraper(),
+                "more_freelance": MoreFreelanceScraper(),
                 "social": SocialMediaScraper(),
             }
             scrapers = [s for k, s in scraper_map.items() if self.source_vars[k].get()]
@@ -285,7 +296,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.3.0", query or "wide search", len(all_posts), leads_added
+                "v1.4.0", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)
@@ -304,7 +315,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 25 Sources"
+                state="normal", text="Start Scraping — 30 Sources"
             ))
 
     def refresh(self):
