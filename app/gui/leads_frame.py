@@ -1,7 +1,9 @@
 import csv
+import threading
 import webbrowser
 import customtkinter as ctk
 from tkinter import filedialog
+from ..outreach import OutreachGenerator
 
 
 class LeadsFrame(ctk.CTkFrame):
@@ -112,12 +114,24 @@ class LeadsFrame(ctk.CTkFrame):
         )
         self.detail_label.grid(row=0, column=0, padx=15, pady=10, sticky="w")
 
+        btn_frame = ctk.CTkFrame(self.detail_frame, fg_color="transparent")
+        btn_frame.grid(row=0, column=1, padx=(5, 15), pady=10)
+
         self.open_url_btn = ctk.CTkButton(
-            self.detail_frame, text="Open URL", width=80, state="disabled",
+            btn_frame, text="Open URL", width=80, state="disabled",
             command=self._open_url,
         )
-        self.open_url_btn.grid(row=0, column=1, padx=(5, 15), pady=10)
+        self.open_url_btn.grid(row=0, column=0, padx=2, pady=2)
+
+        self.outreach_btn = ctk.CTkButton(
+            btn_frame, text="Generate Outreach", width=140, state="disabled",
+            fg_color="#6366f1", hover_color="#4f46e5",
+            command=self._generate_outreach,
+        )
+        self.outreach_btn.grid(row=1, column=0, padx=2, pady=2)
+
         self._current_url = None
+        self._current_lead = None
 
     def _build_filters(self):
         filters = {}
@@ -208,7 +222,9 @@ class LeadsFrame(ctk.CTkFrame):
 
     def _show_detail(self, lead):
         self._current_url = lead["url"]
+        self._current_lead = lead
         self.open_url_btn.configure(state="normal" if self._current_url else "disabled")
+        self.outreach_btn.configure(state="normal")
         detail_text = (
             f"Title: {lead['title']}\n"
             f"Source: {lead['source']}  |  Author: {lead['author'] or 'unknown'}\n"
@@ -226,6 +242,134 @@ class LeadsFrame(ctk.CTkFrame):
 
     def _update_status(self, lead_id, status):
         self.db.update_lead_status(lead_id, status)
+
+    def _generate_outreach(self):
+        if not self._current_lead:
+            return
+        api_key = self.config.get("anthropic_api_key")
+        if not api_key:
+            self._show_outreach_error("Set your Anthropic API key in Settings first.")
+            return
+
+        self.outreach_btn.configure(state="disabled", text="Generating...")
+        lead = self._current_lead
+
+        def _run():
+            generator = OutreachGenerator(api_key)
+            result = generator.generate(lead)
+            self.after(0, lambda: self._show_outreach_popup(lead, result))
+            self.after(0, lambda: self.outreach_btn.configure(
+                state="normal", text="Generate Outreach"
+            ))
+
+        threading.Thread(target=_run, daemon=True).start()
+
+    def _show_outreach_error(self, msg):
+        popup = ctk.CTkToplevel(self)
+        popup.title("Error")
+        popup.geometry("400x120")
+        popup.attributes("-topmost", True)
+        ctk.CTkLabel(popup, text=msg, wraplength=360).pack(padx=20, pady=20)
+        ctk.CTkButton(popup, text="OK", command=popup.destroy).pack(pady=(0, 15))
+
+    def _show_outreach_popup(self, lead, messages):
+        popup = ctk.CTkToplevel(self)
+        popup.title(f"Outreach — {(lead.get('title', ''))[:50]}")
+        popup.geometry("700x620")
+        popup.attributes("-topmost", True)
+        popup.grid_columnconfigure(0, weight=1)
+
+        # Header
+        ctk.CTkLabel(
+            popup, text="Outreach Messages",
+            font=ctk.CTkFont(size=18, weight="bold"),
+        ).grid(row=0, column=0, padx=20, pady=(15, 5), sticky="w")
+
+        ctk.CTkLabel(
+            popup,
+            text=f"Lead: {lead.get('title', '')[:70]}",
+            text_color="gray", wraplength=650,
+        ).grid(row=1, column=0, padx=20, pady=(0, 10), sticky="w")
+
+        # Opener
+        opener_frame = ctk.CTkFrame(popup)
+        opener_frame.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+        opener_frame.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            opener_frame, text="Icebreaker",
+            font=ctk.CTkFont(size=13, weight="bold"), text_color="#a78bfa",
+        ).grid(row=0, column=0, padx=12, pady=(8, 2), sticky="w")
+
+        opener_text = ctk.CTkTextbox(opener_frame, height=40)
+        opener_text.grid(row=1, column=0, padx=12, pady=(0, 4), sticky="ew")
+        opener_text.insert("1.0", messages.get("suggested_opener", ""))
+
+        ctk.CTkButton(
+            opener_frame, text="Copy", width=60,
+            command=lambda: self._copy_text(opener_text),
+        ).grid(row=1, column=1, padx=(0, 12), pady=(0, 4))
+
+        # LinkedIn DM
+        li_frame = ctk.CTkFrame(popup)
+        li_frame.grid(row=3, column=0, padx=20, pady=5, sticky="ew")
+        li_frame.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            li_frame, text="LinkedIn Message",
+            font=ctk.CTkFont(size=13, weight="bold"), text_color="#0a66c2",
+        ).grid(row=0, column=0, padx=12, pady=(8, 2), sticky="w")
+
+        li_text = ctk.CTkTextbox(li_frame, height=100)
+        li_text.grid(row=1, column=0, padx=12, pady=(0, 8), sticky="ew")
+        li_text.insert("1.0", messages.get("linkedin_message", ""))
+
+        ctk.CTkButton(
+            li_frame, text="Copy", width=60,
+            command=lambda: self._copy_text(li_text),
+        ).grid(row=1, column=1, padx=(0, 12), pady=(0, 8))
+
+        # Email
+        email_frame = ctk.CTkFrame(popup)
+        email_frame.grid(row=4, column=0, padx=20, pady=5, sticky="ew")
+        email_frame.grid_columnconfigure(0, weight=1)
+
+        subj = messages.get("email_subject", "")
+        ctk.CTkLabel(
+            email_frame, text=f"Email  —  Subject: {subj}",
+            font=ctk.CTkFont(size=13, weight="bold"), text_color="#22c55e",
+        ).grid(row=0, column=0, padx=12, pady=(8, 2), sticky="w")
+
+        ctk.CTkButton(
+            email_frame, text="Copy Subject", width=100,
+            command=lambda: self.clipboard_clear() or self.clipboard_append(subj),
+        ).grid(row=0, column=1, padx=(0, 12), pady=(8, 2))
+
+        email_text = ctk.CTkTextbox(email_frame, height=140)
+        email_text.grid(row=1, column=0, padx=12, pady=(0, 8), sticky="ew")
+        email_text.insert("1.0", messages.get("email_body", ""))
+
+        ctk.CTkButton(
+            email_frame, text="Copy", width=60,
+            command=lambda: self._copy_text(email_text),
+        ).grid(row=1, column=1, padx=(0, 12), pady=(0, 8))
+
+        # Tip
+        ctk.CTkLabel(
+            popup,
+            text="Tip: Edit the messages above before sending — personalization wins deals.",
+            text_color="gray", font=ctk.CTkFont(size=11),
+        ).grid(row=5, column=0, padx=20, pady=(5, 2), sticky="w")
+
+        ctk.CTkButton(
+            popup, text="Close", width=100, fg_color="gray30",
+            command=popup.destroy,
+        ).grid(row=6, column=0, padx=20, pady=(5, 15))
+
+    def _copy_text(self, textbox):
+        content = textbox.get("1.0", "end").strip()
+        self.clipboard_clear()
+        self.clipboard_append(content)
 
     def _export_csv(self):
         leads = self.db.get_leads()
