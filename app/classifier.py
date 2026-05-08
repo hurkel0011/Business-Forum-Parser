@@ -55,9 +55,9 @@ If you can imagine ANY way a developer could help this person, score it 4+."""
 
 
 MODELS = [
-    "claude-sonnet-4-20250514",
-    "claude-3-5-sonnet-20241022",
-    "claude-3-haiku-20240307",
+    "claude-haiku-4-5-20251001",
+    "claude-sonnet-4-5-20250929",
+    "claude-sonnet-4-6",
 ]
 
 

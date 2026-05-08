@@ -1,18 +1,19 @@
-import requests
-from bs4 import BeautifulSoup
 from .base import BaseScraper
+from .search_util import multi_domain_search
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/125.0.0.0 Safari/537.36"
-    ),
-}
+QUERIES = [
+    'craigslist.org fix OR build OR develop website OR software OR app',
+    'craigslist.org "computer gigs" OR "web design" fix OR automate OR build',
+    'craigslist.org developer OR programmer OR coder hire OR need OR freelance',
+    'craigslist.org automation OR integration OR scraping OR script OR bot',
+    'craigslist.org "web developer" OR "software developer" OR "app developer" needed',
+]
 
-# Major metro areas — computer gigs and web/software services
-CITIES = ["newyork", "losangeles", "chicago", "houston", "sfbay", "seattle", "boston", "atlanta", "denver", "miami"]
-SECTIONS = ["cpg", "web"]  # cpg = computer gigs, web = web/info design
+
+def _label(url):
+    if "craigslist.org" in url:
+        return "Craigslist"
+    return None
 
 
 class CraigslistScraper(BaseScraper):
@@ -21,51 +22,8 @@ class CraigslistScraper(BaseScraper):
     name = "Craigslist Gigs"
 
     def scrape(self, config, query=None, limit=50):
-        posts = []
-        search_query = query or "fix OR build OR develop OR automate OR website"
-
-        for city in CITIES[:5]:
-            for section in SECTIONS:
-                if len(posts) >= limit:
-                    break
-                try:
-                    url = f"https://{city}.craigslist.org/search/{section}"
-                    resp = requests.get(
-                        url,
-                        params={"query": search_query},
-                        headers=HEADERS,
-                        timeout=15,
-                    )
-                    if resp.status_code != 200:
-                        continue
-
-                    soup = BeautifulSoup(resp.text, "html.parser")
-
-                    for item in soup.select(".cl-search-result, .result-row"):
-                        title_el = item.select_one(".titlestring a, .result-title")
-                        price_el = item.select_one(".priceinfo, .result-price")
-
-                        if not title_el:
-                            continue
-
-                        href = title_el.get("href", "")
-                        if href and not href.startswith("http"):
-                            href = f"https://{city}.craigslist.org{href}"
-
-                        price = price_el.get_text(strip=True) if price_el else ""
-                        title_text = title_el.get_text(strip=True)
-                        if price:
-                            title_text = f"[{price}] {title_text}"
-
-                        posts.append({
-                            "source": f"Craigslist/{city}",
-                            "title": title_text,
-                            "content": "",  # Will be enriched later
-                            "url": href,
-                            "author": "poster",
-                        })
-
-                except Exception:
-                    continue
-
-        return posts[:limit]
+        if query:
+            queries = [f'craigslist.org {query}']
+        else:
+            queries = QUERIES
+        return multi_domain_search(queries, "Craigslist", limit, url_filter=_label)
