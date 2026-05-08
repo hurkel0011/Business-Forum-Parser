@@ -2,6 +2,9 @@ import customtkinter as ctk
 import threading
 
 from ..scrapers.google_search import DuckDuckGoScraper
+from ..scrapers.bing import BingSearchScraper
+from ..scrapers.google import GoogleSearchScraper
+from ..scrapers.brave import BraveSearchScraper
 from ..scrapers.github_scraper import GitHubScraper
 from ..scrapers.hackernews import HackerNewsScraper
 from ..scrapers.microsoft import MicrosoftCommunityScraper
@@ -33,35 +36,23 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(
-            sources_frame, text="Sources (8 total, all free)",
+            sources_frame, text="Search Engines + Forums (11 sources, all free)",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
         self.source_vars = {}
-        sources_row1 = [
-            ("websearch", "Web Search (DDG)"),
-            ("github", "GitHub Issues"),
-            ("hackernews", "Hacker News"),
-            ("stackoverflow", "Stack Overflow"),
-        ]
-        sources_row2 = [
-            ("microsoft", "Microsoft Community"),
-            ("trustpilot", "Trustpilot Reviews"),
-            ("g2", "G2 Reviews"),
-            ("indiehackers", "IndieHackers"),
+        sources_rows = [
+            [("ddg", "DuckDuckGo"), ("bing", "Bing / Edge"), ("google", "Google"), ("brave", "Brave Search")],
+            [("github", "GitHub Issues"), ("hackernews", "Hacker News"), ("stackoverflow", "Stack Overflow"), ("microsoft", "Microsoft")],
+            [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("indiehackers", "IndieHackers")],
         ]
 
-        for i, (key, label) in enumerate(sources_row1):
-            var = ctk.BooleanVar(value=True)
-            cb = ctk.CTkCheckBox(sources_frame, text=label, variable=var)
-            cb.grid(row=1, column=i, padx=10, pady=2)
-            self.source_vars[key] = var
-
-        for i, (key, label) in enumerate(sources_row2):
-            var = ctk.BooleanVar(value=True)
-            cb = ctk.CTkCheckBox(sources_frame, text=label, variable=var)
-            cb.grid(row=2, column=i, padx=10, pady=(2, 8))
-            self.source_vars[key] = var
+        for row_idx, row_sources in enumerate(sources_rows):
+            for col_idx, (key, label) in enumerate(row_sources):
+                var = ctk.BooleanVar(value=True)
+                cb = ctk.CTkCheckBox(sources_frame, text=label, variable=var)
+                cb.grid(row=row_idx + 1, column=col_idx, padx=10, pady=2)
+                self.source_vars[key] = var
 
         # Options
         opts_frame = ctk.CTkFrame(self)
@@ -91,7 +82,7 @@ class ScraperFrame(ctk.CTkFrame):
         # Scrape button
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 8 Sources",
+            text="Start Scraping — 11 Sources",
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -136,7 +127,10 @@ class ScraperFrame(ctk.CTkFrame):
             query = self.query_entry.get().strip() or None
 
             scraper_map = {
-                "websearch": DuckDuckGoScraper(),
+                "ddg": DuckDuckGoScraper(),
+                "bing": BingSearchScraper(),
+                "google": GoogleSearchScraper(),
+                "brave": BraveSearchScraper(),
                 "github": GitHubScraper(),
                 "hackernews": HackerNewsScraper(),
                 "microsoft": MicrosoftCommunityScraper(),
@@ -278,7 +272,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 8 Sources"
+                state="normal", text="Start Scraping — 11 Sources"
             ))
 
     def refresh(self):
