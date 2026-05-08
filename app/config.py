@@ -23,18 +23,21 @@ DEFAULT_CONFIG = {
     "anthropic_api_key": "",
     "github_token": "",
     "scrape_sources": {
-        "google": True,
+        "websearch": True,
         "github": True,
         "hackernews": True,
         "microsoft": True,
+        "stackoverflow": True,
     },
     "keywords": [
         "frustrated", "broken", "doesn't work", "help needed",
         "critical bug", "losing money", "deadline", "urgent",
         "switching from", "looking for alternative", "any solution",
+        "integration issue", "workflow broken", "production down",
+        "need automation", "manual process", "data migration",
     ],
-    "min_lead_score": 5.0,
-    "max_results_per_source": 50,
+    "min_lead_score": 3.0,
+    "max_results_per_source": 30,
 }
 
 NUMERIC_KEYS = {"min_lead_score", "max_results_per_source"}

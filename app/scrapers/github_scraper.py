@@ -5,40 +5,73 @@ from .base import BaseScraper
 class GitHubScraper(BaseScraper):
     name = "GitHub Issues"
 
-    def scrape(self, config, query=None, limit=50):
-        keywords = config.get("keywords", [])
-        search_query = query or " OR ".join(keywords[:3])
-        search_query += " is:issue is:open"
+    DEFAULT_QUERIES = [
+        "bug help wanted label:bug",
+        "integration broken",
+        "breaking change migration",
+        "production issue urgent",
+        "workaround needed",
+    ]
 
+    def scrape(self, config, query=None, limit=50):
         headers = {"Accept": "application/vnd.github.v3+json"}
         token = config.get("github_token", "")
         if token:
             headers["Authorization"] = f"token {token}"
 
-        try:
-            resp = requests.get(
-                "https://api.github.com/search/issues",
-                params={
-                    "q": search_query,
-                    "sort": "created",
-                    "order": "desc",
-                    "per_page": min(limit, 100),
-                },
-                headers=headers,
-                timeout=30,
-            )
-            resp.raise_for_status()
-            data = resp.json()
+        if query:
+            queries = [f"{query} is:issue is:open"]
+        else:
+            queries = [f"{q} is:issue is:open" for q in self.DEFAULT_QUERIES]
 
-            posts = []
-            for item in data.get("items", []):
-                posts.append({
-                    "source": "GitHub Issues",
-                    "title": item.get("title", ""),
-                    "content": (item.get("body") or "")[:2000],
-                    "url": item.get("html_url", ""),
-                    "author": item.get("user", {}).get("login", "unknown"),
-                })
-            return posts[:limit]
-        except Exception:
-            return []
+        all_posts = []
+        per_query = max(10, limit // len(queries))
+
+        for search_query in queries:
+            try:
+                resp = requests.get(
+                    "https://api.github.com/search/issues",
+                    params={
+                        "q": search_query,
+                        "sort": "created",
+                        "order": "desc",
+                        "per_page": min(per_query, 30),
+                    },
+                    headers=headers,
+                    timeout=30,
+                )
+                if resp.status_code == 403:
+                    break  # rate limited
+                resp.raise_for_status()
+                data = resp.json()
+
+                for item in data.get("items", []):
+                    body = (item.get("body") or "")[:2000]
+                    reactions = item.get("reactions", {})
+                    reaction_count = sum(
+                        reactions.get(k, 0)
+                        for k in ["+1", "-1", "confused", "heart"]
+                    )
+
+                    repo_url = item.get("repository_url", "")
+                    repo_name = "/".join(repo_url.split("/")[-2:]) if repo_url else ""
+
+                    all_posts.append({
+                        "source": f"GitHub/{repo_name}" if repo_name else "GitHub Issues",
+                        "title": item.get("title", ""),
+                        "content": body,
+                        "url": item.get("html_url", ""),
+                        "author": item.get("user", {}).get("login", "unknown"),
+                    })
+            except Exception:
+                continue
+
+        # Deduplicate by URL
+        seen = set()
+        unique = []
+        for p in all_posts:
+            if p["url"] not in seen:
+                seen.add(p["url"])
+                unique.append(p)
+
+        return unique[:limit]

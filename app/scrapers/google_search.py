@@ -1,86 +1,131 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import quote_plus
 from .base import BaseScraper
 
 
-class GoogleSearchScraper(BaseScraper):
-    name = "Google Search"
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/125.0.0.0 Safari/537.36"
+    ),
+}
 
-    SITE_TARGETS = [
-        "site:reddit.com",
-        "site:community.microsoft.com OR site:techcommunity.microsoft.com",
-        "site:community.zapier.com",
-        "site:community.atlassian.com",
-        "site:answers.microsoft.com",
-        "site:community.hubspot.com",
-        "site:community.shopify.com",
-        "site:support.google.com",
-        "site:discussions.apple.com",
+
+class DuckDuckGoScraper(BaseScraper):
+    """Uses DuckDuckGo HTML (no blocking, no API key)."""
+
+    name = "Web Search"
+
+    FORUM_SITES = [
+        "reddit.com",
+        "community.microsoft.com",
+        "techcommunity.microsoft.com",
+        "answers.microsoft.com",
+        "community.zapier.com",
+        "community.atlassian.com",
+        "community.hubspot.com",
+        "community.shopify.com",
+        "discussions.apple.com",
+        "support.google.com",
+        "stackoverflow.com",
+        "superuser.com",
+        "serverfault.com",
+        "community.make.com",
+        "community.airtable.com",
+        "forum.quickbooks.intuit.com",
+        "community.cloudflare.com",
+        "community.n8n.io",
     ]
 
-    HEADERS = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36"
-        ),
-        "Accept-Language": "en-US,en;q=0.9",
-    }
-
-    def scrape(self, config, query=None, limit=50):
-        keywords = config.get("keywords", [])
-        base_query = query or " OR ".join(f'"{k}"' for k in keywords[:4])
-
-        sites_query = " OR ".join(self.SITE_TARGETS[:5])
-        full_query = f"({base_query}) ({sites_query})"
-
+    def _search_ddg(self, query, max_results=30):
+        """Scrape DuckDuckGo HTML lite for results."""
         posts = []
         try:
-            url = f"https://www.google.com/search?q={quote_plus(full_query)}&num={min(limit, 100)}"
-            resp = requests.get(url, headers=self.HEADERS, timeout=30)
+            resp = requests.post(
+                "https://html.duckduckgo.com/html/",
+                data={"q": query, "b": ""},
+                headers=HEADERS,
+                timeout=30,
+            )
+            if resp.status_code != 200:
+                return posts
 
-            if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, "html.parser")
+            soup = BeautifulSoup(resp.text, "html.parser")
 
-                for result in soup.select("div.g, div[data-sokoban-container]"):
-                    title_el = result.select_one("h3")
-                    link_el = result.select_one("a[href]")
-                    snippet_el = result.select_one(
-                        "div.VwiC3b, span.aCOpRe, div[data-sncf]"
-                    )
+            for result in soup.select(".result"):
+                title_el = result.select_one(".result__a")
+                snippet_el = result.select_one(".result__snippet")
+                url_el = result.select_one(".result__url")
 
-                    if title_el and link_el:
-                        href = link_el.get("href", "")
-                        if not href.startswith("http"):
-                            continue
+                if not title_el:
+                    continue
 
-                        source_site = "Google Search"
-                        if "reddit.com" in href:
-                            source_site = "Google > Reddit"
-                        elif "microsoft.com" in href:
-                            source_site = "Google > Microsoft"
-                        elif "zapier.com" in href:
-                            source_site = "Google > Zapier"
-                        elif "atlassian.com" in href:
-                            source_site = "Google > Atlassian"
-                        elif "apple.com" in href:
-                            source_site = "Google > Apple"
-                        elif "hubspot.com" in href:
-                            source_site = "Google > HubSpot"
-                        elif "shopify.com" in href:
-                            source_site = "Google > Shopify"
+                href = title_el.get("href", "")
+                if href.startswith("//duckduckgo.com/l/?uddg="):
+                    from urllib.parse import unquote
+                    href = unquote(href.split("uddg=")[1].split("&")[0])
 
-                        posts.append({
-                            "source": source_site,
-                            "title": title_el.get_text(strip=True),
-                            "content": (
-                                snippet_el.get_text(strip=True) if snippet_el else ""
-                            ),
-                            "url": href,
-                            "author": "unknown",
-                        })
+                if not href.startswith("http"):
+                    if url_el:
+                        raw = url_el.get_text(strip=True)
+                        if not raw.startswith("http"):
+                            raw = "https://" + raw
+                        href = raw
+
+                source_site = "Web Search"
+                for site in self.FORUM_SITES:
+                    if site in href:
+                        short = site.split(".")[0]
+                        if short == "community":
+                            short = site.split(".")[1]
+                        source_site = f"Web > {short.capitalize()}"
+                        break
+
+                posts.append({
+                    "source": source_site,
+                    "title": title_el.get_text(strip=True),
+                    "content": snippet_el.get_text(strip=True) if snippet_el else "",
+                    "url": href,
+                    "author": "unknown",
+                })
+
+                if len(posts) >= max_results:
+                    break
+
         except Exception:
             pass
 
-        return posts[:limit]
+        return posts
+
+    def scrape(self, config, query=None, limit=50):
+        keywords = config.get("keywords", [])
+
+        if query:
+            queries = [query]
+        else:
+            queries = [
+                '"frustrated with" OR "doesn\'t work" OR "broken" site:reddit.com',
+                '"help needed" OR "critical bug" OR "losing money" forum',
+                '"looking for alternative" OR "switching from" software complaint',
+                '"integration broken" OR "API issue" OR "workflow broken"',
+                '"urgent fix needed" OR "production down" OR "blocking issue"',
+                'site:community.atlassian.com OR site:community.hubspot.com bug',
+                'site:stackoverflow.com "no solution" OR "still broken" business',
+            ]
+
+        all_posts = []
+        per_query = max(10, limit // len(queries))
+
+        for q in queries:
+            results = self._search_ddg(q, max_results=per_query)
+            all_posts.extend(results)
+
+        seen_urls = set()
+        unique = []
+        for p in all_posts:
+            if p["url"] not in seen_urls:
+                seen_urls.add(p["url"])
+                unique.append(p)
+
+        return unique[:limit]
