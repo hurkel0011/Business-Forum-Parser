@@ -28,6 +28,9 @@ from .complaints import ComplaintsScraper
 from .more_freelance import MoreFreelanceScraper
 from .saas_vendors import SaaSVendorScraper
 from .marketing_forums import MarketingForumsScraper
+from .ecommerce import EcommerceScraper
+from .github_discussions import GitHubDiscussionsScraper
+from .accounting import AccountingScraper
 from .enricher import enrich_post
 
 ALL_SCRAPERS = [
@@ -38,6 +41,7 @@ ALL_SCRAPERS = [
     BraveSearchScraper,
     # Developer / tech forums
     GitHubScraper,
+    GitHubDiscussionsScraper,
     HackerNewsScraper,
     MicrosoftCommunityScraper,
     StackOverflowScraper,
@@ -55,6 +59,7 @@ ALL_SCRAPERS = [
     # CMS / eCommerce
     WordPressScraper,
     ShopifyScraper,
+    EcommerceScraper,
     # SaaS / No-code / vendor communities
     DiscourseScraper,
     SpiceworksScraper,
@@ -62,6 +67,8 @@ ALL_SCRAPERS = [
     SaaSVendorScraper,
     # Cloud / hosting
     CloudForumsScraper,
+    # Accounting / finance
+    AccountingScraper,
     # Marketing / SEO
     MarketingForumsScraper,
     # Freelance / gigs
