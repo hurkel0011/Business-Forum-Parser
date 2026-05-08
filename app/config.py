@@ -10,39 +10,24 @@ ENV_FILE = PROJECT_ROOT / ".env"
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".forum_parser")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 
-# Maps .env variable names → config keys
 ENV_KEY_MAP = {
     "ANTHROPIC_API_KEY": "anthropic_api_key",
-    "REDDIT_CLIENT_ID": "reddit_client_id",
-    "REDDIT_CLIENT_SECRET": "reddit_client_secret",
-    "REDDIT_USER_AGENT": "reddit_user_agent",
     "GITHUB_TOKEN": "github_token",
     "MIN_LEAD_SCORE": "min_lead_score",
     "MAX_RESULTS_PER_SOURCE": "max_results_per_source",
 }
 
-# Reverse map for saving back to .env
 CONFIG_TO_ENV = {v: k for k, v in ENV_KEY_MAP.items()}
 
 DEFAULT_CONFIG = {
     "anthropic_api_key": "",
-    "reddit_client_id": "",
-    "reddit_client_secret": "",
-    "reddit_user_agent": "ForumParser/1.0",
     "github_token": "",
     "scrape_sources": {
-        "reddit": True,
+        "google": True,
         "github": True,
         "hackernews": True,
         "microsoft": True,
     },
-    "reddit_subreddits": [
-        "smallbusiness", "SaaS", "Entrepreneur", "sysadmin",
-        "webdev", "devops", "ITManagers", "msp",
-    ],
-    "github_queries": [
-        "bug help wanted", "integration issue", "breaking change",
-    ],
     "keywords": [
         "frustrated", "broken", "doesn't work", "help needed",
         "critical bug", "losing money", "deadline", "urgent",

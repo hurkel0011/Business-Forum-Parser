@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import threading
 
-from ..scrapers.reddit import RedditScraper
+from ..scrapers.google_search import GoogleSearchScraper
 from ..scrapers.github_scraper import GitHubScraper
 from ..scrapers.hackernews import HackerNewsScraper
 from ..scrapers.microsoft import MicrosoftCommunityScraper
@@ -32,7 +32,7 @@ class ScraperFrame(ctk.CTkFrame):
 
         self.source_vars = {}
         sources = [
-            ("reddit", "Reddit"),
+            ("google", "Google Search"),
             ("github", "GitHub Issues"),
             ("hackernews", "Hacker News"),
             ("microsoft", "Microsoft Community"),
@@ -53,7 +53,7 @@ class ScraperFrame(ctk.CTkFrame):
             row=0, column=0, padx=15, pady=10
         )
         self.query_entry = ctk.CTkEntry(
-            query_frame, placeholder_text="Leave blank for default keywords..."
+            query_frame, placeholder_text="e.g. 'CRM integration broken' or leave blank for defaults..."
         )
         self.query_entry.grid(row=0, column=1, padx=(0, 10), pady=10, sticky="ew")
 
@@ -78,7 +78,7 @@ class ScraperFrame(ctk.CTkFrame):
         self.progress_bar.grid(row=4, column=0, padx=20, pady=5, sticky="ew")
         self.progress_bar.set(0)
 
-        self.status_label = ctk.CTkLabel(self, text="Ready", text_color="gray")
+        self.status_label = ctk.CTkLabel(self, text="Ready — no API keys needed for scraping", text_color="gray")
         self.status_label.grid(row=5, column=0, padx=20, pady=5, sticky="w")
 
         # Log
@@ -121,7 +121,7 @@ class ScraperFrame(ctk.CTkFrame):
             limit = int(limit_text) if limit_text else 50
 
             scraper_map = {
-                "reddit": RedditScraper(),
+                "google": GoogleSearchScraper(),
                 "github": GitHubScraper(),
                 "hackernews": HackerNewsScraper(),
                 "microsoft": MicrosoftCommunityScraper(),

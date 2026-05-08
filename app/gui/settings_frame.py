@@ -30,29 +30,20 @@ class SettingsFrame(ctk.CTkFrame):
         )
         self.anthropic_key.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
 
-        ctk.CTkLabel(api_frame, text="Reddit Client ID:").grid(
+        ctk.CTkLabel(api_frame, text="GitHub Token (optional):").grid(
             row=2, column=0, padx=15, pady=5, sticky="w"
         )
-        self.reddit_id = ctk.CTkEntry(
-            api_frame, placeholder_text="Your Reddit app client ID"
-        )
-        self.reddit_id.grid(row=2, column=1, padx=(0, 15), pady=5, sticky="ew")
-
-        ctk.CTkLabel(api_frame, text="Reddit Client Secret:").grid(
-            row=3, column=0, padx=15, pady=5, sticky="w"
-        )
-        self.reddit_secret = ctk.CTkEntry(
-            api_frame, show="*", placeholder_text="Your Reddit app secret"
-        )
-        self.reddit_secret.grid(row=3, column=1, padx=(0, 15), pady=5, sticky="ew")
-
-        ctk.CTkLabel(api_frame, text="GitHub Token (optional):").grid(
-            row=4, column=0, padx=15, pady=5, sticky="w"
-        )
         self.github_token = ctk.CTkEntry(
-            api_frame, show="*", placeholder_text="ghp_..."
+            api_frame, show="*", placeholder_text="ghp_... (increases GitHub rate limits)"
         )
-        self.github_token.grid(row=4, column=1, padx=(0, 15), pady=(5, 15), sticky="ew")
+        self.github_token.grid(row=2, column=1, padx=(0, 15), pady=(5, 10), sticky="ew")
+
+        ctk.CTkLabel(
+            api_frame,
+            text="Only the Anthropic key is required. All scrapers work without keys.",
+            font=ctk.CTkFont(size=11),
+            text_color="gray",
+        ).grid(row=3, column=0, columnspan=2, padx=15, pady=(0, 15), sticky="w")
 
         # --- Scraper Settings ---
         scraper_frame = ctk.CTkFrame(self)
@@ -65,24 +56,18 @@ class SettingsFrame(ctk.CTkFrame):
             font=ctk.CTkFont(size=16, weight="bold"),
         ).grid(row=0, column=0, columnspan=2, padx=15, pady=(15, 10), sticky="w")
 
-        ctk.CTkLabel(scraper_frame, text="Subreddits (comma-separated):").grid(
+        ctk.CTkLabel(scraper_frame, text="Keywords (comma-separated):").grid(
             row=1, column=0, padx=15, pady=5, sticky="w"
         )
-        self.subreddits_entry = ctk.CTkEntry(scraper_frame)
-        self.subreddits_entry.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
-
-        ctk.CTkLabel(scraper_frame, text="Keywords (comma-separated):").grid(
-            row=2, column=0, padx=15, pady=5, sticky="w"
-        )
         self.keywords_entry = ctk.CTkEntry(scraper_frame)
-        self.keywords_entry.grid(row=2, column=1, padx=(0, 15), pady=5, sticky="ew")
+        self.keywords_entry.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
 
         ctk.CTkLabel(scraper_frame, text="Min Lead Score (1-10):").grid(
-            row=3, column=0, padx=15, pady=5, sticky="w"
+            row=2, column=0, padx=15, pady=5, sticky="w"
         )
         self.min_score_entry = ctk.CTkEntry(scraper_frame, width=60)
         self.min_score_entry.grid(
-            row=3, column=1, padx=(0, 15), pady=(5, 15), sticky="w"
+            row=2, column=1, padx=(0, 15), pady=(5, 15), sticky="w"
         )
 
         # Save
@@ -102,17 +87,12 @@ class SettingsFrame(ctk.CTkFrame):
     def _load_values(self):
         fields = [
             (self.anthropic_key, "anthropic_api_key"),
-            (self.reddit_id, "reddit_client_id"),
-            (self.reddit_secret, "reddit_client_secret"),
             (self.github_token, "github_token"),
         ]
         for entry, key in fields:
             val = self.config.get(key, "")
             if val:
                 entry.insert(0, val)
-
-        subs = self.config.get("reddit_subreddits", [])
-        self.subreddits_entry.insert(0, ", ".join(subs))
 
         kws = self.config.get("keywords", [])
         self.keywords_entry.insert(0, ", ".join(kws))
@@ -122,12 +102,7 @@ class SettingsFrame(ctk.CTkFrame):
 
     def _save(self):
         self.config.set("anthropic_api_key", self.anthropic_key.get().strip())
-        self.config.set("reddit_client_id", self.reddit_id.get().strip())
-        self.config.set("reddit_client_secret", self.reddit_secret.get().strip())
         self.config.set("github_token", self.github_token.get().strip())
-
-        subs = [s.strip() for s in self.subreddits_entry.get().split(",") if s.strip()]
-        self.config.set("reddit_subreddits", subs)
 
         kws = [k.strip() for k in self.keywords_entry.get().split(",") if k.strip()]
         self.config.set("keywords", kws)
