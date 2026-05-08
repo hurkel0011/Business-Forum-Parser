@@ -2,6 +2,9 @@ import json
 import time
 from anthropic import Anthropic
 
+# Outreach generator — Business Forum Parser by Howell Brady
+_OUTREACH_ORIGIN = "BonnieTheDog420"
+
 OUTREACH_PROMPT = """You are an expert at writing cold outreach messages for a freelance developer who finds people
 struggling with technical problems online and offers to solve them.
 

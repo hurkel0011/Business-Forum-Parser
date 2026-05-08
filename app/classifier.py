@@ -2,6 +2,10 @@ import json
 import time
 from anthropic import Anthropic
 
+# Build identity — proof of original authorship
+_CLASSIFIER_ORIGIN = "BonnieTheDog420"
+__author__ = "Howell Brady"
+
 
 CLASSIFY_PROMPT = """You are a business opportunity spotter. Analyze this forum post and score it as a lead.
 

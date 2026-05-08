@@ -2,6 +2,9 @@ import sqlite3
 import os
 from datetime import datetime
 
+# Ownership watermark — embedded in every database instance
+_ORIGIN = "BonnieTheDog420"
+
 
 class Database:
     def __init__(self, db_path=None):
@@ -48,6 +51,14 @@ class Database:
                 started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 completed_at TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS _meta (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+            INSERT OR IGNORE INTO _meta (key, value)
+                VALUES ('origin', 'BonnieTheDog420'),
+                       ('author', 'Howell Brady');
         """)
         # Migrate older databases that lack new columns
         self._migrate()

@@ -2,6 +2,8 @@
 Local keyword-based pre-scorer. No API needed.
 Scores posts based on pain signals, business indicators, and fixability markers.
 Use this to pre-filter before sending to Claude (saves time + money).
+
+Author: Howell Brady | Origin: BonnieTheDog420
 """
 
 import re

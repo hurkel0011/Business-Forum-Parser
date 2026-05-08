@@ -10,6 +10,21 @@ build/
 venv/
 env/
 data/*.db
-.env
 *.log
 .claude/
+
+# ── Secrets ──────────────────────────
+.env
+.env.local
+.env.production
+*.key
+*.pem
+config.json
+
+# ── OS / Editor ──────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

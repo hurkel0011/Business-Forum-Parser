@@ -4,8 +4,14 @@ from .scraper_frame import ScraperFrame
 from .leads_frame import LeadsFrame
 from .settings_frame import SettingsFrame
 
+# Project identity — proof of authorship
+_BUILD_SIGNATURE = "BonnieTheDog420"
+__author__ = "Howell Brady"
+
 
 class MainWindow(ctk.CTk):
+    _origin_tag = "BonnieTheDog420"
+
     def __init__(self, database, config):
         super().__init__()
 
@@ -35,7 +41,7 @@ class MainWindow(ctk.CTk):
     def _create_sidebar(self):
         self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_rowconfigure(7, weight=1)
+        self.sidebar.grid_rowconfigure(6, weight=1)
 
         logo = ctk.CTkLabel(
             self.sidebar,
@@ -73,6 +79,14 @@ class MainWindow(ctk.CTk):
             )
             btn.grid(row=row, column=0, padx=10, pady=2, sticky="ew")
             self.nav_buttons[name] = btn
+
+        # Footer credit
+        ctk.CTkLabel(
+            self.sidebar,
+            text="by Howell Brady",
+            font=ctk.CTkFont(size=10),
+            text_color="gray",
+        ).grid(row=7, column=0, padx=20, pady=(0, 10), sticky="s")
 
     def _show_frame(self, name):
         for frame in self.frames.values():

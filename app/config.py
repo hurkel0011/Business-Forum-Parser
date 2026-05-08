@@ -4,6 +4,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv, set_key
 
+# Project config — Business Forum Parser by Howell Brady
+_CONFIG_SIGNATURE = "BonnieTheDog420"
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ENV_FILE = PROJECT_ROOT / ".env"
 
