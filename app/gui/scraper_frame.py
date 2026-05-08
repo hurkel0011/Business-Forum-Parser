@@ -12,6 +12,12 @@ from ..scrapers.stackoverflow import StackOverflowScraper
 from ..scrapers.trustpilot import TrustpilotScraper
 from ..scrapers.g2_reviews import G2ReviewScraper
 from ..scrapers.indiehackers import IndieHackersScraper
+from ..scrapers.upwork import UpworkScraper
+from ..scrapers.craigslist import CraigslistScraper
+from ..scrapers.social_search import SocialMediaScraper
+from ..scrapers.capterra import CapterraScraper
+from ..scrapers.quora import QuoraScraper
+from ..scrapers.producthunt import ProductHuntScraper
 from ..scrapers.enricher import enrich_post
 from ..prescorer import batch_prescore
 from ..classifier import LeadClassifier
@@ -36,7 +42,7 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(
-            sources_frame, text="Search Engines + Forums (11 sources, all free)",
+            sources_frame, text="17 Sources — Search Engines, Forums, Reviews, Freelance, Social",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
@@ -44,7 +50,9 @@ class ScraperFrame(ctk.CTkFrame):
         sources_rows = [
             [("ddg", "DuckDuckGo"), ("bing", "Bing / Edge"), ("google", "Google"), ("brave", "Brave Search")],
             [("github", "GitHub Issues"), ("hackernews", "Hacker News"), ("stackoverflow", "Stack Overflow"), ("microsoft", "Microsoft")],
-            [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("indiehackers", "IndieHackers")],
+            [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("capterra", "Capterra"), ("indiehackers", "IndieHackers")],
+            [("quora", "Quora"), ("producthunt", "Product Hunt"), ("upwork", "Upwork Jobs"), ("craigslist", "Craigslist Gigs")],
+            [("social", "Social Media (FB/LinkedIn/X/Reddit)")],
         ]
 
         for row_idx, row_sources in enumerate(sources_rows):
@@ -82,7 +90,7 @@ class ScraperFrame(ctk.CTkFrame):
         # Scrape button
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 11 Sources",
+            text="Start Scraping — 17 Sources",
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -137,7 +145,13 @@ class ScraperFrame(ctk.CTkFrame):
                 "stackoverflow": StackOverflowScraper(),
                 "trustpilot": TrustpilotScraper(),
                 "g2": G2ReviewScraper(),
+                "capterra": CapterraScraper(),
                 "indiehackers": IndieHackersScraper(),
+                "quora": QuoraScraper(),
+                "producthunt": ProductHuntScraper(),
+                "upwork": UpworkScraper(),
+                "craigslist": CraigslistScraper(),
+                "social": SocialMediaScraper(),
             }
             scrapers = [s for k, s in scraper_map.items() if self.source_vars[k].get()]
 
@@ -253,7 +267,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.1.0", query or "wide search", len(all_posts), leads_added
+                "v1.2.0", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)
@@ -272,7 +286,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 11 Sources"
+                state="normal", text="Start Scraping — 17 Sources"
             ))
 
     def refresh(self):
