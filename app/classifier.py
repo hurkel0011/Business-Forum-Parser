@@ -18,9 +18,13 @@ Respond with ONLY valid JSON:
     "fixability_score": <1-10>,
     "category": "bug|integration|automation|data|security|performance|ux|migration|workflow|other",
     "lead_score": <1-10>,
-    "company_info": "<guess company/industry or 'unknown'>",
+    "company_info": "<company name or industry, e.g. 'Acme Corp' or 'eCommerce/retail'>",
+    "software_product": "<specific software mentioned, e.g. 'Salesforce', 'WordPress', 'Jira', or ''>",
+    "difficulty": "quick_fix|moderate|complex|major_project",
+    "estimated_hours": <best guess hours to fix: 1-200>,
+    "revenue_potential": "low|medium|high|premium",
     "summary": "<the problem in one sentence>",
-    "solution_approach": "<how to fix it in one sentence>"
+    "solution_approach": "<how a developer would fix it in one sentence>"
 }}
 
 SCORING RULES - be generous:
@@ -29,6 +33,20 @@ SCORING RULES - be generous:
 - 2-3: Vague issue or already partly solved
 - 1: No real problem at all
 
+DIFFICULTY GUIDE:
+- quick_fix: Under 4 hours — config change, small script, CSS fix, simple bug
+- moderate: 4-20 hours — custom integration, plugin development, data migration
+- complex: 20-80 hours — full feature build, complex automation, multi-system work
+- major_project: 80+ hours — full app/platform, major overhaul
+
+REVENUE POTENTIAL:
+- low: Under $200 — quick fixes, small scripts
+- medium: $200-$1000 — moderate dev work, integrations
+- high: $1000-$5000 — complex projects, ongoing maintenance
+- premium: $5000+ — enterprise solutions, major builds
+
+Extract the SPECIFIC software product name if one is mentioned (Salesforce, WordPress, Jira, Shopify, etc.).
+Extract the company name or industry if identifiable.
 If you can imagine ANY way a developer could help this person, score it 4+."""
 
 

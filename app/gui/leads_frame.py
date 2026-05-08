@@ -32,54 +32,71 @@ class LeadsFrame(ctk.CTkFrame):
             header_frame, text="Refresh", width=80, command=self.refresh
         ).grid(row=0, column=2, padx=5)
 
-        # Filters
+        # Filters — row 1
         filter_frame = ctk.CTkFrame(self)
         filter_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
-        ctk.CTkLabel(filter_frame, text="Source:").grid(
-            row=0, column=0, padx=(15, 5), pady=10
-        )
+        ctk.CTkLabel(filter_frame, text="Source:").grid(row=0, column=0, padx=(15, 5), pady=5)
         self.source_filter = ctk.CTkComboBox(
-            filter_frame, values=["All"], width=160, command=lambda _: self.refresh()
+            filter_frame, values=["All"], width=140, command=lambda _: self.refresh()
         )
-        self.source_filter.grid(row=0, column=1, padx=5, pady=10)
+        self.source_filter.grid(row=0, column=1, padx=5, pady=5)
 
-        ctk.CTkLabel(filter_frame, text="Severity:").grid(
-            row=0, column=2, padx=(15, 5), pady=10
-        )
+        ctk.CTkLabel(filter_frame, text="Severity:").grid(row=0, column=2, padx=(10, 5), pady=5)
         self.severity_filter = ctk.CTkComboBox(
-            filter_frame,
-            values=["All", "critical", "high", "medium", "low"],
-            width=120,
-            command=lambda _: self.refresh(),
+            filter_frame, values=["All", "critical", "high", "medium", "low"],
+            width=100, command=lambda _: self.refresh(),
         )
-        self.severity_filter.grid(row=0, column=3, padx=5, pady=10)
+        self.severity_filter.grid(row=0, column=3, padx=5, pady=5)
 
-        ctk.CTkLabel(filter_frame, text="Status:").grid(
-            row=0, column=4, padx=(15, 5), pady=10
+        ctk.CTkLabel(filter_frame, text="Difficulty:").grid(row=0, column=4, padx=(10, 5), pady=5)
+        self.difficulty_filter = ctk.CTkComboBox(
+            filter_frame, values=["All", "quick_fix", "moderate", "complex", "major_project"],
+            width=120, command=lambda _: self.refresh(),
         )
+        self.difficulty_filter.grid(row=0, column=5, padx=5, pady=5)
+
+        ctk.CTkLabel(filter_frame, text="Status:").grid(row=0, column=6, padx=(10, 5), pady=5)
         self.status_filter = ctk.CTkComboBox(
-            filter_frame,
-            values=["All", "new", "contacted", "in_progress", "won", "lost"],
-            width=120,
-            command=lambda _: self.refresh(),
+            filter_frame, values=["All", "new", "contacted", "in_progress", "won", "lost"],
+            width=110, command=lambda _: self.refresh(),
         )
-        self.status_filter.grid(row=0, column=5, padx=5, pady=10)
+        self.status_filter.grid(row=0, column=7, padx=(5, 15), pady=5)
 
-        ctk.CTkLabel(filter_frame, text="Min Score:").grid(
-            row=0, column=6, padx=(15, 5), pady=10
+        # Filters — row 2
+        ctk.CTkLabel(filter_frame, text="Software:").grid(row=1, column=0, padx=(15, 5), pady=5)
+        self.software_filter = ctk.CTkComboBox(
+            filter_frame, values=["All"], width=140, command=lambda _: self.refresh()
         )
+        self.software_filter.grid(row=1, column=1, padx=5, pady=5)
+
+        ctk.CTkLabel(filter_frame, text="Company:").grid(row=1, column=2, padx=(10, 5), pady=5)
+        self.company_filter = ctk.CTkComboBox(
+            filter_frame, values=["All"], width=140, command=lambda _: self.refresh()
+        )
+        self.company_filter.grid(row=1, column=3, padx=5, pady=5)
+
+        ctk.CTkLabel(filter_frame, text="Min Score:").grid(row=1, column=4, padx=(10, 5), pady=5)
         self.score_filter = ctk.CTkEntry(filter_frame, width=50, placeholder_text="0")
-        self.score_filter.grid(row=0, column=7, padx=(0, 15), pady=10)
+        self.score_filter.grid(row=1, column=5, padx=5, pady=5, sticky="w")
+
+        ctk.CTkLabel(filter_frame, text="Sort by:").grid(row=1, column=6, padx=(10, 5), pady=5)
+        self.sort_filter = ctk.CTkComboBox(
+            filter_frame,
+            values=["Highest Score", "Easiest First", "Hardest First", "Quickest Wins", "Best Revenue"],
+            width=140, command=lambda _: self.refresh(),
+        )
+        self.sort_filter.set("Highest Score")
+        self.sort_filter.grid(row=1, column=7, padx=(5, 15), pady=5)
 
         # Column headers
         header_row = ctk.CTkFrame(self)
         header_row.grid(row=2, column=0, padx=20, pady=(10, 0), sticky="ew")
-        header_row.grid_columnconfigure(2, weight=1)
+        header_row.grid_columnconfigure(3, weight=1)
 
         cols = [
-            ("Score", 50), ("Severity", 70), ("Title", 0),
-            ("Source", 130), ("Category", 100), ("Status", 100),
+            ("Score", 40), ("Sev", 55), ("Diff", 70), ("Title", 0),
+            ("Software", 100), ("Source", 100), ("Status", 90),
         ]
         for i, (name, width) in enumerate(cols):
             kw = {"width": width} if width else {}
@@ -90,7 +107,7 @@ class LeadsFrame(ctk.CTkFrame):
                 text_color="gray",
                 **kw,
             )
-            if i == 2:
+            if i == 3:  # Title column stretches
                 lbl.grid(row=0, column=i, padx=5, pady=8, sticky="ew")
             else:
                 lbl.grid(row=0, column=i, padx=5, pady=8)
@@ -141,15 +158,34 @@ class LeadsFrame(ctk.CTkFrame):
         severity = self.severity_filter.get()
         if severity and severity != "All":
             filters["severity"] = severity
+        difficulty = self.difficulty_filter.get()
+        if difficulty and difficulty != "All":
+            filters["difficulty"] = difficulty
         status = self.status_filter.get()
         if status and status != "All":
             filters["status"] = status
+        software = self.software_filter.get()
+        if software and software != "All":
+            filters["software_product"] = software
+        company = self.company_filter.get()
+        if company and company != "All":
+            filters["company_info"] = company
         score_text = self.score_filter.get().strip()
         if score_text:
             try:
                 filters["min_score"] = float(score_text)
             except ValueError:
                 pass
+        # Sort
+        sort_map = {
+            "Highest Score": "score",
+            "Easiest First": "easiest",
+            "Hardest First": "hardest",
+            "Quickest Wins": "quickest",
+            "Best Revenue": "revenue",
+        }
+        sort_val = self.sort_filter.get()
+        filters["sort"] = sort_map.get(sort_val, "score")
         return filters or None
 
     def refresh(self):
@@ -159,59 +195,77 @@ class LeadsFrame(ctk.CTkFrame):
         sources = sorted(set(l["source"] for l in all_leads if l["source"]))
         self.source_filter.configure(values=["All"] + sources)
 
+        # Populate software and company filters
+        softwares = sorted(set(
+            l["software_product"] for l in all_leads
+            if "software_product" in l.keys() and l["software_product"]
+        ))
+        self.software_filter.configure(values=["All"] + softwares)
+
+        companies = sorted(set(
+            l["company_info"] for l in all_leads
+            if l["company_info"] and l["company_info"] != "unknown"
+        ))
+        self.company_filter.configure(values=["All"] + companies)
+
         for widget in self.leads_scroll.winfo_children():
             widget.destroy()
 
         for lead in leads:
             row = ctk.CTkFrame(self.leads_scroll, cursor="hand2")
             row.pack(fill="x", padx=2, pady=1)
-            row.grid_columnconfigure(2, weight=1)
+            row.grid_columnconfigure(3, weight=1)
             row.bind("<Button-1>", lambda e, l=lead: self._show_detail(l))
 
             score = lead["lead_score"] or 0
             score_color = (
                 "#22c55e" if score >= 7 else "#eab308" if score >= 4 else "#ef4444"
             )
-
             ctk.CTkLabel(
-                row, text=f"{score:.0f}", width=50,
+                row, text=f"{score:.0f}", width=40,
                 font=ctk.CTkFont(weight="bold"), text_color=score_color,
-            ).grid(row=0, column=0, padx=5, pady=6)
+            ).grid(row=0, column=0, padx=4, pady=5)
 
-            sev = (lead["severity"] or "unknown").upper()
-            sev_colors = {
-                "CRITICAL": "#ef4444", "HIGH": "#f97316",
-                "MEDIUM": "#eab308", "LOW": "#22c55e",
-            }
+            sev = (lead["severity"] or "?").upper()[:4]
+            sev_colors = {"CRIT": "#ef4444", "HIGH": "#f97316", "MEDI": "#eab308", "LOW": "#22c55e"}
             ctk.CTkLabel(
-                row, text=sev, width=70,
+                row, text=sev, width=55,
                 font=ctk.CTkFont(size=10, weight="bold"),
                 text_color=sev_colors.get(sev, "gray"),
-            ).grid(row=0, column=1, padx=5, pady=6)
+            ).grid(row=0, column=1, padx=4, pady=5)
+
+            diff = lead["difficulty"] or "unknown" if "difficulty" in lead.keys() else "unknown"
+            diff_short = {"quick_fix": "QUICK", "moderate": "MOD", "complex": "HARD", "major_project": "MAJOR"}.get(diff, "?")
+            diff_colors = {"QUICK": "#22c55e", "MOD": "#3b82f6", "HARD": "#f97316", "MAJOR": "#ef4444"}
+            ctk.CTkLabel(
+                row, text=diff_short, width=70,
+                font=ctk.CTkFont(size=10, weight="bold"),
+                text_color=diff_colors.get(diff_short, "gray"),
+            ).grid(row=0, column=2, padx=4, pady=5)
 
             ctk.CTkLabel(
-                row, text=(lead["title"] or "")[:70], anchor="w"
-            ).grid(row=0, column=2, padx=5, pady=6, sticky="ew")
+                row, text=(lead["title"] or "")[:60], anchor="w"
+            ).grid(row=0, column=3, padx=4, pady=5, sticky="ew")
+
+            sw = (lead["software_product"] if "software_product" in lead.keys() else "") or ""
+            ctk.CTkLabel(
+                row, text=sw[:15], width=100,
+                font=ctk.CTkFont(size=10), text_color="#a78bfa",
+            ).grid(row=0, column=4, padx=4, pady=5)
 
             ctk.CTkLabel(
-                row, text=lead["source"] or "", width=130,
-                font=ctk.CTkFont(size=11), text_color="gray",
-            ).grid(row=0, column=3, padx=5, pady=6)
-
-            ctk.CTkLabel(
-                row, text=lead["category"] or "", width=100,
-                font=ctk.CTkFont(size=11),
-            ).grid(row=0, column=4, padx=5, pady=6)
+                row, text=(lead["source"] or "")[:15], width=100,
+                font=ctk.CTkFont(size=10), text_color="gray",
+            ).grid(row=0, column=5, padx=4, pady=5)
 
             status_menu = ctk.CTkComboBox(
                 row,
                 values=["new", "contacted", "in_progress", "won", "lost"],
-                width=100,
-                font=ctk.CTkFont(size=11),
+                width=90, font=ctk.CTkFont(size=10),
                 command=lambda val, lid=lead["id"]: self._update_status(lid, val),
             )
             status_menu.set(lead["status"] or "new")
-            status_menu.grid(row=0, column=5, padx=5, pady=6)
+            status_menu.grid(row=0, column=6, padx=4, pady=5)
 
         if not leads:
             ctk.CTkLabel(
@@ -225,15 +279,28 @@ class LeadsFrame(ctk.CTkFrame):
         self._current_lead = lead
         self.open_url_btn.configure(state="normal" if self._current_url else "disabled")
         self.outreach_btn.configure(state="normal")
+
+        diff = lead["difficulty"] if "difficulty" in lead.keys() else "unknown"
+        hours = lead["estimated_hours"] if "estimated_hours" in lead.keys() else 0
+        sw = lead["software_product"] if "software_product" in lead.keys() else ""
+        rev = lead["revenue_potential"] if "revenue_potential" in lead.keys() else "unknown"
+        summary = lead["summary"] if "summary" in lead.keys() else ""
+        approach = lead["solution_approach"] if "solution_approach" in lead.keys() else ""
+
         detail_text = (
             f"Title: {lead['title']}\n"
             f"Source: {lead['source']}  |  Author: {lead['author'] or 'unknown'}\n"
-            f"URL: {lead['url'] or 'N/A'}\n"
             f"Score: {lead['lead_score']}  |  Severity: {lead['severity']}  |  "
             f"Fixability: {lead['fixability_score']}/10  |  Category: {lead['category']}\n"
-            f"Company: {lead['company_info'] or 'unknown'}\n\n"
-            f"{(lead['content'] or '')[:400]}"
+            f"Difficulty: {diff}  |  Est. Hours: {hours}  |  Revenue: {rev}\n"
+            f"Software: {sw or 'N/A'}  |  Company: {lead['company_info'] or 'unknown'}\n"
         )
+        if summary:
+            detail_text += f"Problem: {summary}\n"
+        if approach:
+            detail_text += f"Solution: {approach}\n"
+        detail_text += f"\n{(lead['content'] or '')[:300]}"
+
         self.detail_label.configure(text=detail_text)
 
     def _open_url(self):

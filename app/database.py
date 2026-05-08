@@ -30,6 +30,12 @@ class Database:
                 company_info TEXT,
                 status TEXT DEFAULT 'new',
                 notes TEXT,
+                difficulty TEXT DEFAULT 'unknown',
+                estimated_hours REAL DEFAULT 0,
+                software_product TEXT DEFAULT '',
+                revenue_potential TEXT DEFAULT 'unknown',
+                summary TEXT DEFAULT '',
+                solution_approach TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -43,14 +49,35 @@ class Database:
                 completed_at TIMESTAMP
             );
         """)
+        # Migrate older databases that lack new columns
+        self._migrate()
         self.conn.commit()
+
+    def _migrate(self):
+        """Add new columns to existing databases."""
+        existing = {
+            row[1] for row in self.conn.execute("PRAGMA table_info(leads)").fetchall()
+        }
+        new_cols = [
+            ("difficulty", "TEXT DEFAULT 'unknown'"),
+            ("estimated_hours", "REAL DEFAULT 0"),
+            ("software_product", "TEXT DEFAULT ''"),
+            ("revenue_potential", "TEXT DEFAULT 'unknown'"),
+            ("summary", "TEXT DEFAULT ''"),
+            ("solution_approach", "TEXT DEFAULT ''"),
+        ]
+        for col_name, col_def in new_cols:
+            if col_name not in existing:
+                self.conn.execute(f"ALTER TABLE leads ADD COLUMN {col_name} {col_def}")
 
     def add_lead(self, lead_data):
         cursor = self.conn.execute(
             """INSERT INTO leads
                (source, title, url, author, content, severity,
-                fixability_score, category, lead_score, company_info)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                fixability_score, category, lead_score, company_info,
+                difficulty, estimated_hours, software_product,
+                revenue_potential, summary, solution_approach)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 lead_data.get("source", ""),
                 lead_data.get("title", ""),
@@ -62,6 +89,12 @@ class Database:
                 lead_data.get("category", ""),
                 lead_data.get("lead_score", 0),
                 lead_data.get("company_info", ""),
+                lead_data.get("difficulty", "unknown"),
+                lead_data.get("estimated_hours", 0),
+                lead_data.get("software_product", ""),
+                lead_data.get("revenue_potential", "unknown"),
+                lead_data.get("summary", ""),
+                lead_data.get("solution_approach", ""),
             ),
         )
         self.conn.commit()
@@ -85,11 +118,32 @@ class Database:
             if filters.get("min_score"):
                 conditions.append("lead_score >= ?")
                 params.append(filters["min_score"])
+            if filters.get("difficulty"):
+                conditions.append("difficulty = ?")
+                params.append(filters["difficulty"])
+            if filters.get("software_product"):
+                conditions.append("software_product = ?")
+                params.append(filters["software_product"])
+            if filters.get("company_info"):
+                conditions.append("company_info = ?")
+                params.append(filters["company_info"])
 
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
 
-        query += " ORDER BY lead_score DESC, created_at DESC"
+        # Sort order
+        sort = filters.get("sort", "score") if filters else "score"
+        if sort == "easiest":
+            query += " ORDER BY CASE difficulty WHEN 'quick_fix' THEN 1 WHEN 'moderate' THEN 2 WHEN 'complex' THEN 3 WHEN 'major_project' THEN 4 ELSE 5 END, lead_score DESC"
+        elif sort == "hardest":
+            query += " ORDER BY CASE difficulty WHEN 'major_project' THEN 1 WHEN 'complex' THEN 2 WHEN 'moderate' THEN 3 WHEN 'quick_fix' THEN 4 ELSE 5 END, lead_score DESC"
+        elif sort == "quickest":
+            query += " ORDER BY estimated_hours ASC, lead_score DESC"
+        elif sort == "revenue":
+            query += " ORDER BY CASE revenue_potential WHEN 'premium' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END, lead_score DESC"
+        else:
+            query += " ORDER BY lead_score DESC, created_at DESC"
+
         return self.conn.execute(query, params).fetchall()
 
     def update_lead_status(self, lead_id, status, notes=None):
@@ -122,13 +176,61 @@ class Database:
                 "SELECT status, COUNT(*) FROM leads GROUP BY status"
             ).fetchall()
         )
+        stats["by_difficulty"] = dict(
+            self.conn.execute(
+                "SELECT difficulty, COUNT(*) FROM leads WHERE difficulty != 'unknown' GROUP BY difficulty"
+            ).fetchall()
+        )
+        stats["by_software"] = dict(
+            self.conn.execute(
+                "SELECT software_product, COUNT(*) FROM leads "
+                "WHERE software_product != '' AND software_product IS NOT NULL "
+                "GROUP BY software_product ORDER BY COUNT(*) DESC LIMIT 15"
+            ).fetchall()
+        )
+        stats["by_company"] = dict(
+            self.conn.execute(
+                "SELECT company_info, COUNT(*) FROM leads "
+                "WHERE company_info != '' AND company_info != 'unknown' "
+                "AND company_info IS NOT NULL "
+                "GROUP BY company_info ORDER BY COUNT(*) DESC LIMIT 15"
+            ).fetchall()
+        )
+        stats["by_revenue"] = dict(
+            self.conn.execute(
+                "SELECT revenue_potential, COUNT(*) FROM leads "
+                "WHERE revenue_potential != 'unknown' GROUP BY revenue_potential"
+            ).fetchall()
+        )
         stats["avg_score"] = (
             self.conn.execute("SELECT AVG(lead_score) FROM leads").fetchone()[0] or 0
         )
         stats["high_value"] = self.conn.execute(
             "SELECT COUNT(*) FROM leads WHERE lead_score >= 7"
         ).fetchone()[0]
+        stats["quick_wins"] = self.conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE difficulty IN ('quick_fix', 'moderate') "
+            "AND lead_score >= 5"
+        ).fetchone()[0]
         return stats
+
+    def get_leads_by_software(self):
+        """Group leads by software product."""
+        return self.conn.execute(
+            "SELECT software_product, COUNT(*) as cnt, AVG(lead_score) as avg_score, "
+            "AVG(fixability_score) as avg_fix "
+            "FROM leads WHERE software_product != '' AND software_product IS NOT NULL "
+            "GROUP BY software_product ORDER BY cnt DESC"
+        ).fetchall()
+
+    def get_leads_by_company(self):
+        """Group leads by company."""
+        return self.conn.execute(
+            "SELECT company_info, COUNT(*) as cnt, AVG(lead_score) as avg_score "
+            "FROM leads WHERE company_info != '' AND company_info != 'unknown' "
+            "AND company_info IS NOT NULL "
+            "GROUP BY company_info ORDER BY cnt DESC"
+        ).fetchall()
 
     def log_scrape_run(self, source, query, posts_found, leads_generated):
         self.conn.execute(

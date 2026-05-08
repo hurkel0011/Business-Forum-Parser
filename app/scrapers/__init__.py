@@ -31,6 +31,13 @@ from .marketing_forums import MarketingForumsScraper
 from .ecommerce import EcommerceScraper
 from .github_discussions import GitHubDiscussionsScraper
 from .accounting import AccountingScraper
+from .education import EducationScraper
+from .healthcare_it import HealthcareITScraper
+from .hr_recruiting import HRRecruitingScraper
+from .legal_tech import LegalTechScraper
+from .real_estate_tech import RealEstateTechScraper
+from .gamedev import GameDevScraper
+from .nocode_platforms import NoCodePlatformsScraper
 from .enricher import enrich_post
 
 ALL_SCRAPERS = [
@@ -71,6 +78,20 @@ ALL_SCRAPERS = [
     AccountingScraper,
     # Marketing / SEO
     MarketingForumsScraper,
+    # Education / LMS
+    EducationScraper,
+    # Healthcare IT
+    HealthcareITScraper,
+    # HR / Recruiting
+    HRRecruitingScraper,
+    # Legal tech
+    LegalTechScraper,
+    # Real estate / PropTech
+    RealEstateTechScraper,
+    # Game dev / Creative
+    GameDevScraper,
+    # No-code / Low-code
+    NoCodePlatformsScraper,
     # Freelance / gigs
     UpworkScraper,
     CraigslistScraper,

@@ -34,6 +34,13 @@ from ..scrapers.marketing_forums import MarketingForumsScraper
 from ..scrapers.ecommerce import EcommerceScraper
 from ..scrapers.github_discussions import GitHubDiscussionsScraper
 from ..scrapers.accounting import AccountingScraper
+from ..scrapers.education import EducationScraper
+from ..scrapers.healthcare_it import HealthcareITScraper
+from ..scrapers.hr_recruiting import HRRecruitingScraper
+from ..scrapers.legal_tech import LegalTechScraper
+from ..scrapers.real_estate_tech import RealEstateTechScraper
+from ..scrapers.gamedev import GameDevScraper
+from ..scrapers.nocode_platforms import NoCodePlatformsScraper
 from ..scrapers.enricher import enrich_post
 from ..prescorer import batch_prescore
 from ..classifier import LeadClassifier
@@ -58,7 +65,7 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(
-            sources_frame, text="33 Sources — the widest net on the internet",
+            sources_frame, text="40 Sources — the widest net on the internet",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
@@ -71,8 +78,9 @@ class ScraperFrame(ctk.CTkFrame):
             [("indiehackers", "IndieHackers"), ("quora", "Quora"), ("producthunt", "Product Hunt"), ("apple", "Apple Forums")],
             [("wordpress", "WordPress"), ("shopify", "Shopify"), ("ecommerce", "WooCommerce/Magento/Wix"), ("accounting", "QuickBooks/Xero/Sage")],
             [("discourse", "SaaS Communities"), ("spiceworks", "Spiceworks IT"), ("saas_vendors", "Salesforce/HubSpot"), ("marketing", "SEO/Marketing")],
+            [("education", "Education / LMS"), ("healthcare", "Healthcare IT"), ("hr_recruiting", "HR / Recruiting"), ("legal_tech", "Legal Tech")],
+            [("real_estate", "Real Estate Tech"), ("gamedev", "Game Dev / Creative"), ("nocode", "No-Code / Low-Code"), ("social", "Social Media")],
             [("upwork", "Upwork"), ("craigslist", "Craigslist"), ("freelancer", "Freelancer.com"), ("more_freelance", "Fiverr/Guru/PPH")],
-            [("social", "Social Media (FB/LinkedIn/X/Reddit)")],
         ]
 
         for row_idx, row_sources in enumerate(sources_rows):
@@ -110,7 +118,7 @@ class ScraperFrame(ctk.CTkFrame):
         # Scrape button
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 33 Sources",
+            text="Start Scraping — 40 Sources",
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -188,6 +196,13 @@ class ScraperFrame(ctk.CTkFrame):
                 "ecommerce": EcommerceScraper(),
                 "accounting": AccountingScraper(),
                 "social": SocialMediaScraper(),
+                "education": EducationScraper(),
+                "healthcare": HealthcareITScraper(),
+                "hr_recruiting": HRRecruitingScraper(),
+                "legal_tech": LegalTechScraper(),
+                "real_estate": RealEstateTechScraper(),
+                "gamedev": GameDevScraper(),
+                "nocode": NoCodePlatformsScraper(),
             }
             scrapers = [s for k, s in scraper_map.items() if self.source_vars[k].get()]
 
@@ -303,7 +318,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.4.1", query or "wide search", len(all_posts), leads_added
+                "v1.5.0", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)
@@ -322,7 +337,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 33 Sources"
+                state="normal", text="Start Scraping — 40 Sources"
             ))
 
     def refresh(self):
