@@ -18,6 +18,14 @@ from ..scrapers.social_search import SocialMediaScraper
 from ..scrapers.capterra import CapterraScraper
 from ..scrapers.quora import QuoraScraper
 from ..scrapers.producthunt import ProductHuntScraper
+from ..scrapers.wordpress import WordPressScraper
+from ..scrapers.shopify import ShopifyScraper
+from ..scrapers.devto import DevToScraper
+from ..scrapers.freelancer import FreelancerScraper
+from ..scrapers.spiceworks import SpiceworksScraper
+from ..scrapers.discourse import DiscourseScraper
+from ..scrapers.atlassian import AtlassianScraper
+from ..scrapers.apple import AppleScraper
 from ..scrapers.enricher import enrich_post
 from ..prescorer import batch_prescore
 from ..classifier import LeadClassifier
@@ -42,7 +50,7 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(
-            sources_frame, text="17 Sources — Search Engines, Forums, Reviews, Freelance, Social",
+            sources_frame, text="25 Sources — Engines, Forums, Reviews, Freelance, SaaS, Social",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
@@ -51,7 +59,9 @@ class ScraperFrame(ctk.CTkFrame):
             [("ddg", "DuckDuckGo"), ("bing", "Bing / Edge"), ("google", "Google"), ("brave", "Brave Search")],
             [("github", "GitHub Issues"), ("hackernews", "Hacker News"), ("stackoverflow", "Stack Overflow"), ("microsoft", "Microsoft")],
             [("trustpilot", "Trustpilot"), ("g2", "G2 Reviews"), ("capterra", "Capterra"), ("indiehackers", "IndieHackers")],
-            [("quora", "Quora"), ("producthunt", "Product Hunt"), ("upwork", "Upwork Jobs"), ("craigslist", "Craigslist Gigs")],
+            [("quora", "Quora"), ("producthunt", "Product Hunt"), ("devto", "Dev.to"), ("atlassian", "Atlassian")],
+            [("wordpress", "WordPress Forums"), ("shopify", "Shopify Community"), ("discourse", "SaaS Communities"), ("spiceworks", "Spiceworks IT")],
+            [("upwork", "Upwork Jobs"), ("craigslist", "Craigslist Gigs"), ("freelancer", "Freelancer.com"), ("apple", "Apple Forums")],
             [("social", "Social Media (FB/LinkedIn/X/Reddit)")],
         ]
 
@@ -90,7 +100,7 @@ class ScraperFrame(ctk.CTkFrame):
         # Scrape button
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 17 Sources",
+            text="Start Scraping — 25 Sources",
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -149,8 +159,16 @@ class ScraperFrame(ctk.CTkFrame):
                 "indiehackers": IndieHackersScraper(),
                 "quora": QuoraScraper(),
                 "producthunt": ProductHuntScraper(),
+                "devto": DevToScraper(),
+                "atlassian": AtlassianScraper(),
+                "wordpress": WordPressScraper(),
+                "shopify": ShopifyScraper(),
+                "discourse": DiscourseScraper(),
+                "spiceworks": SpiceworksScraper(),
                 "upwork": UpworkScraper(),
                 "craigslist": CraigslistScraper(),
+                "freelancer": FreelancerScraper(),
+                "apple": AppleScraper(),
                 "social": SocialMediaScraper(),
             }
             scrapers = [s for k, s in scraper_map.items() if self.source_vars[k].get()]
@@ -267,7 +285,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.2.0", query or "wide search", len(all_posts), leads_added
+                "v1.3.0", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)
@@ -286,7 +304,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 17 Sources"
+                state="normal", text="Start Scraping — 25 Sources"
             ))
 
     def refresh(self):

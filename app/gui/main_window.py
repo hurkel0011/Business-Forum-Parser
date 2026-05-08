@@ -12,7 +12,7 @@ class MainWindow(ctk.CTk):
         self.db = database
         self.config = config
 
-        self.title("Business Forum Parser v1.2.0")
+        self.title("Business Forum Parser v1.3.0")
         self.geometry("1200x750")
         self.minsize(900, 600)
 
@@ -46,7 +46,7 @@ class MainWindow(ctk.CTk):
 
         version = ctk.CTkLabel(
             self.sidebar,
-            text="v1.2.0",
+            text="v1.3.0",
             font=ctk.CTkFont(size=12),
             text_color="gray",
         )

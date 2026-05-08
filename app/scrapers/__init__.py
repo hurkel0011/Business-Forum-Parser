@@ -15,6 +15,14 @@ from .social_search import SocialMediaScraper
 from .capterra import CapterraScraper
 from .quora import QuoraScraper
 from .producthunt import ProductHuntScraper
+from .wordpress import WordPressScraper
+from .shopify import ShopifyScraper
+from .devto import DevToScraper
+from .freelancer import FreelancerScraper
+from .spiceworks import SpiceworksScraper
+from .discourse import DiscourseScraper
+from .atlassian import AtlassianScraper
+from .apple import AppleScraper
 from .enricher import enrich_post
 
 ALL_SCRAPERS = [
@@ -28,6 +36,7 @@ ALL_SCRAPERS = [
     HackerNewsScraper,
     MicrosoftCommunityScraper,
     StackOverflowScraper,
+    AtlassianScraper,
     # Review sites
     TrustpilotScraper,
     G2ReviewScraper,
@@ -36,9 +45,18 @@ ALL_SCRAPERS = [
     IndieHackersScraper,
     QuoraScraper,
     ProductHuntScraper,
+    DevToScraper,
+    # CMS / eCommerce
+    WordPressScraper,
+    ShopifyScraper,
+    # SaaS / No-code communities
+    DiscourseScraper,
+    SpiceworksScraper,
+    AppleScraper,
     # Freelance / gigs
     UpworkScraper,
     CraigslistScraper,
+    FreelancerScraper,
     # Social media search
     SocialMediaScraper,
 ]
