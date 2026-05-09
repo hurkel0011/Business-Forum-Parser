@@ -2,14 +2,17 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'warriorforum.com "need help" OR "looking for" developer OR programmer OR coder',
-    'warriorforum.com fix OR build OR automate website OR software OR tool',
-    'growthhackers.com problem OR issue OR help OR "looking for" tool OR software',
-    'moz.com/community help OR issue OR broken OR fix SEO OR website',
-    'sitepoint.com/community help OR error OR "not working" OR "how to fix"',
-    'webmasterworld.com issue OR problem OR broken OR "need help" website',
-    'forums.digitalpoint.com "need developer" OR hire OR fix OR build',
-    'ecommercefuel.com problem OR issue OR help OR "looking for" developer',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Mailchimp error OR broken OR "not working" OR deliverability help',
+    'site:reddit.com ActiveCampaign error OR broken OR "not working" OR help',
+    'site:reddit.com Klaviyo error OR broken OR "not working" OR integration help',
+    'site:reddit.com SEMrush OR Ahrefs error OR broken OR "not working" help',
+    'site:reddit.com Moz SEO error OR broken OR "not working" help',
+    # General complaint queries
+    'Mailchimp community error automation help',
+    'ActiveCampaign community error integration help',
+    'Klaviyo community error integration help',
+    'Moz SEO community error crawl help',
 ]
 
 
@@ -37,10 +40,9 @@ class MarketingForumsScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'warriorforum.com {query}',
-                f'growthhackers.com {query}',
-                f'moz.com/community {query}',
-                f'sitepoint.com/community {query}',
+                f'site:reddit.com Mailchimp OR ActiveCampaign OR Klaviyo {query}',
+                f'site:reddit.com Moz OR SEMrush OR Ahrefs {query}',
+                f'Mailchimp OR ActiveCampaign OR Klaviyo {query} community forum help',
             ]
         else:
             queries = QUERIES

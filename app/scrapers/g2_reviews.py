@@ -2,12 +2,13 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'g2.com/products reviews "what do you dislike" OR complaint OR problem',
-    'g2.com/products salesforce OR hubspot OR jira OR zendesk review complaint',
-    'g2.com/products shopify OR quickbooks OR mailchimp OR clickup negative review',
-    'g2.com/products asana OR monday OR notion OR freshdesk issue OR problem',
-    'g2.com/products "worst thing" OR "doesn\'t work" OR "deal breaker" OR broken',
-    'g2.com/products intercom OR pipedrive OR slack complaint OR frustrating',
+    # Site-targeted: G2
+    'site:g2.com review software broken OR "doesn\'t work" OR integration issue',
+    'site:g2.com review "what do you dislike" OR complaint OR problem',
+    'site:g2.com review Salesforce OR HubSpot OR Jira OR Zendesk complaint',
+    'site:g2.com review Shopify OR QuickBooks OR Mailchimp issue OR problem',
+    'site:g2.com review "worst thing" OR broken OR avoid software',
+    'site:g2.com review Asana OR Monday OR Notion frustrating OR issue',
 ]
 
 
@@ -24,7 +25,10 @@ class G2ReviewScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'g2.com/products {query} review']
+            queries = [
+                f'site:g2.com {query} review complaint issue',
+                f'site:g2.com {query} review broken problem',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "G2", limit, url_filter=_label)

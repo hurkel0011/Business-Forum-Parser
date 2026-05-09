@@ -2,12 +2,20 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'wordpress.org/support help OR broken OR "not working" plugin OR theme',
-    'wordpress.org/support migration OR "moved site" OR "lost data" OR "white screen"',
-    'wordpress.org/support "need developer" OR "hire someone" OR "can someone fix"',
-    'wordpress.org/support WooCommerce error OR broken OR "doesn\'t work"',
-    'wordpress.org/support urgent OR "site down" OR hacked OR malware',
-    'wordpress.org/support custom OR modify OR "change functionality" plugin',
+    # Site-targeted: official community forums
+    'site:wordpress.org/support plugin error OR broken OR "not working" help',
+    'site:wordpress.org/support theme error OR broken OR "not working" help',
+    'site:wordpress.org/support migration OR "white screen" OR crash help',
+    'site:wordpress.org/support hacked OR malware OR security issue help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com WordPress error OR broken OR "not working" OR help',
+    'site:reddit.com WooCommerce error OR broken OR "not working" OR help',
+    'site:reddit.com WordPress plugin OR theme broken OR error help',
+    'site:reddit.com Elementor error OR broken OR "not working" help',
+    # General complaint queries
+    'WordPress community error broken plugin help',
+    'WooCommerce community error checkout help',
+    'Elementor community error broken help',
 ]
 
 
@@ -24,7 +32,11 @@ class WordPressScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'wordpress.org/support {query}']
+            queries = [
+                f'site:wordpress.org/support {query}',
+                f'site:reddit.com WordPress OR WooCommerce OR Elementor {query}',
+                f'WordPress OR WooCommerce {query} community forum help',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "WordPress", limit, url_filter=_label)

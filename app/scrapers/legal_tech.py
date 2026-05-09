@@ -2,13 +2,17 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.clio.com issue OR "not working" OR error OR integration OR help',
-    '"Clio" law OR legal "not working" OR broken OR integration OR bug',
-    '"MyCase" OR "PracticePanther" "not working" OR broken OR error OR integration',
-    '"legal software" OR "practice management" "not working" OR broken OR "need help" integration',
-    '"contract management" OR "document automation" broken OR "not working" OR error OR need',
-    '"legal billing" OR "time tracking" "law firm" "not working" OR broken OR error OR integration',
-    '"legal tech" OR "lawtech" issue OR problem OR "not working" OR integration',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Clio "legal software" error OR broken OR integration help',
+    'site:reddit.com PracticePanther error OR broken OR "not working" help',
+    'site:reddit.com MyCase error OR broken OR "not working" help',
+    'site:reddit.com LawPay error OR broken OR billing OR integration help',
+    'site:reddit.com "legal tech" OR "practice management" software error OR broken help',
+    # General complaint queries
+    'Clio community error integration help',
+    'PracticePanther community error billing help',
+    'MyCase community error sync help',
+    '"legal software" community error workaround help',
 ]
 
 
@@ -30,9 +34,9 @@ class LegalTechScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'"legal software" OR "law firm" {query}',
-                f'community.clio.com {query}',
-                f'"legal tech" {query}',
+                f'site:reddit.com Clio OR "legal software" {query}',
+                f'site:reddit.com PracticePanther OR MyCase OR LawPay {query}',
+                f'Clio OR "legal software" {query} community forum help',
             ]
         else:
             queries = QUERIES

@@ -2,14 +2,19 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'bbb.org/complaint software OR website OR app OR service',
-    'bbb.org customer reviews software OR technology OR web',
-    'sitejabber.com/reviews terrible OR broken OR scam OR "doesn\'t work" software',
-    'sitejabber.com/reviews "website builder" OR hosting OR saas OR crm',
-    'pissedconsumer.com software OR app OR website OR service broken OR terrible',
-    'pissedconsumer.com developer OR "tech support" OR integration OR "data loss"',
-    'consumeraffairs.com/technology review terrible OR avoid',
-    'consumeraffairs.com/computers problem OR issue OR broken OR refund',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com software broken frustrated help',
+    'site:reddit.com integration broken paying for fix',
+    'site:reddit.com SaaS broken "not working" frustrated help',
+    'site:reddit.com software terrible "need developer" fix help',
+    # Site-targeted: complaint sites
+    'site:bbb.org software OR SaaS OR app broken OR complaint OR "not working"',
+    'site:sitejabber.com software OR SaaS broken OR terrible OR "doesn\'t work"',
+    'site:pissedconsumer.com software OR app OR service broken OR terrible',
+    'site:consumeraffairs.com software OR technology broken OR "not working" OR issue',
+    # General complaint queries
+    'BBB software complaint broken help',
+    'consumer complaint software broken terrible review',
 ]
 
 
@@ -33,10 +38,10 @@ class ComplaintsScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'bbb.org {query}',
-                f'sitejabber.com {query}',
-                f'pissedconsumer.com {query}',
-                f'consumeraffairs.com {query}',
+                f'site:reddit.com {query} software broken frustrated help',
+                f'site:bbb.org {query} complaint',
+                f'site:sitejabber.com {query} review complaint',
+                f'site:pissedconsumer.com {query} complaint',
             ]
         else:
             queries = QUERIES

@@ -2,12 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.shopify.com "need help" OR broken OR "not working" theme OR app',
-    'community.shopify.com "custom code" OR "hire developer" OR "need someone to"',
-    'community.shopify.com checkout OR payment OR shipping issue OR error OR broken',
-    'community.shopify.com migrate OR "moving from" OR "switch to shopify"',
-    'community.shopify.com speed OR slow OR SEO OR conversion fix OR help',
-    'community.shopify.com integration OR API OR "app doesn\'t" OR sync problem',
+    # Site-targeted: official community forum
+    'site:community.shopify.com error OR broken OR "not working" OR help',
+    'site:community.shopify.com app OR theme error OR broken OR issue',
+    'site:community.shopify.com checkout OR payment OR shipping error OR issue',
+    'site:community.shopify.com integration OR API OR sync error OR broken',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Shopify error OR broken OR "not working" OR help',
+    'site:reddit.com Shopify app OR theme OR checkout broken OR error help',
+    'site:reddit.com Shopify migration OR "moving from" OR "switch to" help',
+    # General complaint queries
+    'Shopify community error broken help',
+    'Shopify community integration API help',
 ]
 
 
@@ -24,7 +30,11 @@ class ShopifyScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'community.shopify.com {query}']
+            queries = [
+                f'site:community.shopify.com {query}',
+                f'site:reddit.com Shopify {query}',
+                f'Shopify {query} community forum help',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "Shopify", limit, url_filter=_label)

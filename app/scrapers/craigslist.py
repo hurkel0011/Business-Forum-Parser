@@ -2,11 +2,14 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'craigslist.org fix OR build OR develop website OR software OR app',
-    'craigslist.org "computer gigs" OR "web design" fix OR automate OR build',
-    'craigslist.org developer OR programmer OR coder hire OR need OR freelance',
-    'craigslist.org automation OR integration OR scraping OR script OR bot',
-    'craigslist.org "web developer" OR "software developer" OR "app developer" needed',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com need developer fix software small business',
+    'site:reddit.com need developer fix website OR app OR integration',
+    'site:reddit.com "looking for developer" OR "need programmer" fix OR build OR automate',
+    'site:reddit.com small business software fix OR repair OR build hire',
+    # General complaint queries
+    'Craigslist computer gigs developer fix website software',
+    'Craigslist developer programmer hire fix build project',
 ]
 
 
@@ -23,7 +26,10 @@ class CraigslistScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'craigslist.org {query}']
+            queries = [
+                f'site:reddit.com need developer {query} fix small business',
+                f'Craigslist {query} developer fix project',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "Craigslist", limit, url_filter=_label)

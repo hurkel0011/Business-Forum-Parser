@@ -2,13 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.bamboohr.com issue OR "not working" OR integration OR help',
-    '"BambooHR" "not working" OR broken OR integration OR API OR bug',
-    '"Workday" error OR "not working" OR integration OR broken OR help',
-    '"ADP" payroll OR workforce "not working" OR error OR broken OR integration',
-    '"Greenhouse" OR "Lever" OR "ATS" integration OR broken OR "not working" OR API OR bug',
-    '"HR software" OR "HRIS" OR "payroll software" "not working" OR broken OR "need help" integration',
-    '"Gusto" OR "Rippling" "not working" OR error OR broken OR integration OR help',
+    # Site-targeted: official community forums
+    'site:community.workday.com error OR broken OR integration OR help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Workday error OR broken OR "not working" OR integration help',
+    'site:reddit.com BambooHR error OR broken OR "not working" OR integration help',
+    'site:reddit.com ADP payroll error OR broken OR "not working" OR sync help',
+    'site:reddit.com Greenhouse ATS error OR broken OR integration help',
+    # General complaint queries
+    'Workday community error integration help',
+    'BambooHR community error sync help',
+    'ADP payroll community error integration help',
+    'Greenhouse ATS community error help',
 ]
 
 
@@ -38,9 +43,9 @@ class HRRecruitingScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'"HR software" OR "HRIS" {query}',
-                f'"BambooHR" OR "Workday" OR "ADP" {query}',
-                f'"payroll" OR "recruiting" {query}',
+                f'site:community.workday.com {query}',
+                f'site:reddit.com Workday OR BambooHR OR ADP {query}',
+                f'Workday OR BambooHR OR ADP OR Greenhouse {query} community forum help',
             ]
         else:
             queries = QUERIES

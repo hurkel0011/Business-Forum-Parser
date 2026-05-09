@@ -15,16 +15,20 @@ FORUMS = [
 ]
 
 QUERIES = [
-    'community.zapier.com "need help" OR "doesn\'t work" OR broken',
-    'community.zapier.com integration OR trigger OR action OR zap issue',
-    'community.airtable.com "how to" OR "is it possible" OR workaround',
-    'community.airtable.com limitation OR "can\'t do" OR "not supported" OR alternative',
-    'community.make.com error OR "not working" OR broken OR help',
-    'community.n8n.io API OR integration OR webhook OR automation help',
-    'discourse.webflow.com issue OR error OR help OR "not working"',
-    'forum.bubble.io bug OR error OR "not working" OR broken OR help',
-    'community.retool.com issue OR error OR integration OR help',
-    'community.monday.com "not working" OR broken OR integration OR API',
+    # Site-targeted: Discourse meta forum
+    'site:meta.discourse.org error OR broken OR bug OR help',
+    'site:meta.discourse.org plugin OR theme OR migration OR upgrade issue',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Discourse error OR broken OR "not working" OR help',
+    'site:reddit.com Discourse plugin OR theme OR migration help',
+    # General SaaS community forum queries
+    'site:community.notion.so error OR broken OR bug OR help',
+    'site:community.monday.com error OR broken OR integration OR help',
+    'site:discourse.webflow.com error OR broken OR bug OR help',
+    'site:community.retool.com error OR broken OR integration OR help',
+    # General complaint queries
+    'Discourse community error plugin help',
+    'Webflow community error broken help',
 ]
 
 
@@ -43,11 +47,11 @@ class DiscourseScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'community.zapier.com {query}',
-                f'community.airtable.com {query}',
-                f'community.make.com {query}',
-                f'forum.bubble.io {query}',
-                f'discourse.webflow.com {query}',
+                f'site:meta.discourse.org {query}',
+                f'site:community.notion.so {query}',
+                f'site:community.monday.com {query}',
+                f'site:reddit.com Discourse OR Notion OR Monday.com {query}',
+                f'Discourse OR Notion OR Monday.com {query} community forum help',
             ]
         else:
             queries = QUERIES

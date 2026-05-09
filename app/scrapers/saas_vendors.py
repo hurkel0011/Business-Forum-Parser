@@ -2,14 +2,20 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'trailhead.salesforce.com error OR issue OR help OR broken',
-    'developer.salesforce.com/forums integration OR API OR migration OR deploy',
-    'community.hubspot.com "not working" OR broken OR error OR bug',
-    'community.hubspot.com integration OR API OR workflow OR custom',
-    'community.zendesk.com issue OR broken OR help',
-    'community.freshworks.com "not working" OR error OR bug OR help',
-    'community.intercom.com issue OR broken OR integration OR API',
-    'stripe.com/docs error OR issue OR help integration',
+    # Site-targeted: official community forums
+    'site:trailblazer.salesforce.com error OR broken OR integration OR help',
+    'site:community.hubspot.com error OR broken OR integration OR help',
+    'site:support.zendesk.com error OR broken OR integration OR help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Salesforce error OR broken OR "not working" OR integration help',
+    'site:reddit.com HubSpot error OR broken OR "not working" OR integration help',
+    'site:reddit.com Zendesk error OR broken OR "not working" OR help',
+    'site:reddit.com Freshworks OR Freshdesk error OR broken OR help',
+    'site:reddit.com Intercom error OR broken OR integration OR help',
+    'site:reddit.com Stripe integration OR error OR webhook OR "not working" help',
+    # StackOverflow
+    'site:stackoverflow.com Salesforce API integration error',
+    'site:stackoverflow.com HubSpot API integration error',
 ]
 
 
@@ -20,7 +26,7 @@ def _label(url):
         return "HubSpot"
     if "zendesk.com" in url:
         return "Zendesk"
-    if "freshworks.com" in url:
+    if "freshworks.com" in url or "freshdesk.com" in url:
         return "Freshworks"
     if "intercom.com" in url:
         return "Intercom"
@@ -37,10 +43,10 @@ class SaaSVendorScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'trailhead.salesforce.com {query}',
-                f'community.hubspot.com {query}',
-                f'community.zendesk.com {query}',
-                f'community.freshworks.com {query}',
+                f'site:reddit.com Salesforce {query}',
+                f'site:community.hubspot.com {query}',
+                f'site:trailblazer.salesforce.com {query}',
+                f'Salesforce OR HubSpot OR Zendesk {query} community forum help',
             ]
         else:
             queries = QUERIES

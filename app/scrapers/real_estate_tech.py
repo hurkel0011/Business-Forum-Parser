@@ -2,13 +2,17 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    '"AppFolio" OR "Buildium" OR "Rent Manager" "not working" OR broken OR error OR integration',
-    '"property management software" "not working" OR broken OR "need help" integration OR automation',
-    '"Follow Up Boss" OR "kvCORE" OR "BoomTown" "not working" OR broken OR integration OR error',
-    '"real estate CRM" broken OR "not working" OR issue OR "need help" integration OR API',
-    'MLS OR IDX integration OR "not working" OR broken OR error OR feed',
-    'Zillow OR Realtor.com API OR integration OR "not working" OR broken OR sync',
-    '"proptech" OR "real estate technology" issue OR broken OR "not working" OR need',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com "real estate CRM" error OR broken OR "not working" help',
+    'site:reddit.com kvCORE error OR broken OR integration OR help',
+    'site:reddit.com Propertybase error OR broken OR integration OR help',
+    'site:reddit.com Zillow OR Realtor.com API OR integration OR error help',
+    'site:reddit.com MLS OR IDX integration OR "not working" OR broken OR error help',
+    # General complaint queries
+    'kvCORE community error integration help',
+    'Propertybase community error integration help',
+    'real estate tech software community error workaround help',
+    'MLS IDX integration error community help',
 ]
 
 
@@ -34,9 +38,9 @@ class RealEstateTechScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'"property management" OR "real estate" {query}',
-                f'MLS OR IDX {query}',
-                f'"proptech" {query}',
+                f'site:reddit.com "real estate CRM" OR kvCORE OR Propertybase {query}',
+                f'site:reddit.com MLS OR IDX {query} integration help',
+                f'real estate tech {query} community forum help',
             ]
         else:
             queries = QUERIES

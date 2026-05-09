@@ -2,13 +2,17 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'quickbooks.intuit.com/learn-support "not working" OR error OR broken OR help',
-    'quickbooks.intuit.com/learn-support integration OR import OR export OR sync',
-    'central.xero.com issue OR error OR broken OR help OR integration',
-    'support.freshbooks.com issue OR "not working" OR help OR integration',
-    'support.waveapps.com issue OR "not working" OR help OR integration',
-    'communityhub.sage.com error OR issue OR help OR "not working"',
-    '"accounting software" "not working" OR broken OR "need help" integration OR migration',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com QuickBooks error OR broken OR "not working" OR help',
+    'site:reddit.com QuickBooks integration OR sync OR import OR export help',
+    'site:reddit.com Xero error OR broken OR "not working" OR help',
+    'site:reddit.com Xero integration OR sync OR "bank feed" OR API help',
+    'site:reddit.com FreshBooks error OR broken OR "not working" OR help',
+    # General complaint queries
+    'QuickBooks community error integration help',
+    'Xero community error sync help',
+    'FreshBooks community error invoice help',
+    'Sage accounting community error migration help',
 ]
 
 
@@ -34,9 +38,9 @@ class AccountingScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'quickbooks.intuit.com {query}',
-                f'central.xero.com {query}',
-                f'communityhub.sage.com {query}',
+                f'site:reddit.com QuickBooks OR Xero OR FreshBooks {query}',
+                f'QuickBooks OR Xero OR FreshBooks {query} community forum help',
+                f'Sage accounting {query} community forum help',
             ]
         else:
             queries = QUERIES

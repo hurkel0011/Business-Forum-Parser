@@ -1,152 +1,169 @@
 """
 Shared search utility for all scrapers.
-Uses Bing with domain-keyword targeting (not site: operator which triggers CAPTCHAs).
+Uses DuckDuckGo (via ddgs package) as primary search engine with junk filtering.
 
 Author: Howell Brady | Origin: BonnieTheDog420
 """
 
-import requests
+import re
 import time
 import random
-from urllib.parse import quote_plus
-from bs4 import BeautifulSoup
+import logging
 
-USER_AGENTS = [
-    (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-    ),
-    (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/136.0.0.0 Safari/537.36"
-    ),
-    (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/137.0.0.0 Safari/537.36"
-    ),
-    (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) "
-        "Gecko/20100101 Firefox/128.0"
-    ),
-]
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Junk filters — skip results that will never be useful leads
+# ---------------------------------------------------------------------------
+
+JUNK_DOMAINS = {
+    # Reference / dictionary / encyclopedia
+    "wikipedia.org", "dictionary.com", "merriam-webster.com",
+    "cambridge.org/dictionary", "wiktionary.org", "britannica.com",
+    "investopedia.com", "oxfordlearnersdictionaries.com",
+    "englishpage.com", "wordreference.com", "ldoceonline.com",
+    "grammarly.com", "englishclub.com", "langeek.co",
+    # Social / media / shopping
+    "youtube.com", "tiktok.com", "pinterest.com",
+    "amazon.com", "ebay.com", "etsy.com", "airbnb.com",
+    "facebook.com/login", "linkedin.com/login", "twitter.com/login",
+    # Ad / tracking URLs
+    "bing.com/aclick", "bing.com/ck/a",
+    # SEO / link-checker tools (false positives for "broken" queries)
+    "brokenlinkcheck.com", "dnschecker.org", "seojuice.com",
+    "ahrefs.com", "semrush.com", "moz.com/link-explorer",
+    "linksman.io", "uptek.com", "deadlinkchecker.com",
+    "sitechecker.pro", "drlinkcheck.com",
+    # Stock / finance (false positives for company name queries)
+    "finance.yahoo.com", "fool.com", "marketwatch.com",
+    "businesswire.com", "prnewswire.com",
+    # Tech blog / general troubleshooting (not forums)
+    "howtogeek.com", "makeuseof.com", "lifehacker.com",
+    "pcmag.com", "techradar.com", "tomsguide.com",
+    "cloudwards.net", "comparitech.com",
+    # Chinese sites (non-English results)
+    "zhihu.com", "baidu.com",
+}
+
+JUNK_TITLE_PATTERNS = re.compile(
+    r"^(log ?in|sign ?in|sign ?up|create account|pricing|about us|"
+    r"contact us|home ?page|wikipedia|definition|meaning|"
+    r"what is .{0,20}\?$)",
+    re.IGNORECASE,
+)
 
 
-def _get_headers():
-    return {
-        "User-Agent": random.choice(USER_AGENTS),
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    }
+def _is_junk(url, title):
+    """Filter out results that will never be useful leads."""
+    url_lower = url.lower()
+    title_lower = title.lower()
+
+    # Skip ad/tracking URLs
+    if "bing.com/aclick" in url_lower or "bing.com/ck/a" in url_lower:
+        return True
+
+    # Skip junk domains
+    for domain in JUNK_DOMAINS:
+        if domain in url_lower:
+            return True
+
+    # Skip homepage-level URLs (no path beyond /)
+    stripped = url_lower.rstrip("/")
+    if stripped.count("/") <= 2:  # https://domain.com = 2 slashes
+        return True
+
+    # Skip junk title patterns
+    if JUNK_TITLE_PATTERNS.search(title_lower):
+        return True
+
+    # Skip marketing/product pages
+    marketing_signals = ["pricing", "features", "get started", "free trial", "demo"]
+    if any(s in title_lower for s in marketing_signals):
+        return True
+
+    return False
 
 
-def bing_search(query, count=10):
-    """Search Bing and return list of (title, snippet, url) tuples.
+# ---------------------------------------------------------------------------
+# DuckDuckGo search via ddgs package
+# ---------------------------------------------------------------------------
 
-    IMPORTANT: Do NOT use 'site:' operator in queries — Bing blocks it with CAPTCHAs.
-    Instead use the domain as a keyword: 'community.cloudflare.com error not working'
+def ddg_search(query, count=10):
+    """Search DuckDuckGo and return filtered results.
+
+    Uses the ddgs package which handles DDG's API properly.
+    Supports site: operator (unlike Bing HTML scraping).
+    Filters out ads, junk domains, homepages, and marketing pages.
+
+    Returns:
+        List of dicts with keys: title, content, url
     """
     results = []
     try:
-        url = f"https://www.bing.com/search?q={quote_plus(query)}&count={count}"
-        resp = requests.get(url, headers=_get_headers(), timeout=20)
-        if resp.status_code != 200:
-            return results
+        from ddgs import DDGS
+        ddgs = DDGS()
+        raw = list(ddgs.text(query, max_results=min(count + 5, 30)))
 
-        soup = BeautifulSoup(resp.text, "html.parser")
+        for item in raw:
+            url = item.get("href", "")
+            title = item.get("title", "")
+            snippet = item.get("body", "")
 
-        for item in soup.select("#b_results .b_algo"):
-            title_el = item.select_one("h2 a")
-            snippet_el = item.select_one(".b_caption p, .b_lineclamp2")
-
-            if not title_el:
+            if not url or not url.startswith("http"):
                 continue
 
-            href = title_el.get("href", "")
-            if not href.startswith("http"):
+            if _is_junk(url, title):
+                continue
+
+            # Skip very short/empty snippets
+            if len(snippet) < 30 and len(title) < 20:
                 continue
 
             results.append({
-                "title": title_el.get_text(strip=True),
-                "content": snippet_el.get_text(strip=True) if snippet_el else "",
-                "url": href,
+                "title": title,
+                "content": snippet,
+                "url": url,
             })
 
             if len(results) >= count:
                 break
 
-    except Exception:
-        pass
+    except ImportError:
+        log.warning("ddgs package not installed — run: pip install ddgs")
+    except Exception as exc:
+        log.debug("DDG search error: %s", exc)
 
     return results
 
 
-def search_domain(domain, terms, source_name="Web", count=10, url_filter=None):
-    """Search for posts on a specific domain using Bing keyword targeting.
+# ---------------------------------------------------------------------------
+# Multi-query search aggregator (used by all domain-specific scrapers)
+# ---------------------------------------------------------------------------
+
+def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None, delay=0.8):
+    """Run multiple search queries via DuckDuckGo, filter junk, deduplicate.
 
     Args:
-        domain: Domain keyword to target (e.g. 'community.cloudflare.com')
-        terms: Search terms (e.g. '"error" OR "not working" OR "help"')
-        source_name: Default source label for results
-        count: Max results to return
-        url_filter: Optional function(url) -> source_name or None to filter/label results
-
-    Returns:
-        List of post dicts with title, content, url, author, source keys
-    """
-    query = f"{domain} {terms}"
-    raw = bing_search(query, count=count)
-
-    posts = []
-    for item in raw:
-        href = item["url"]
-
-        # Apply URL filter if provided
-        if url_filter:
-            label = url_filter(href)
-            if label is None:
-                continue  # Skip URLs that don't match
-            source = label
-        else:
-            source = source_name
-
-        posts.append({
-            "source": source,
-            "title": item["title"],
-            "content": item["content"],
-            "url": href,
-            "author": "unknown",
-        })
-
-    return posts
-
-
-def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None, delay=0.3):
-    """Run multiple search queries and deduplicate results.
-
-    Args:
-        queries: List of search query strings (NO site: operator!)
+        queries: List of search query strings (site: operator IS supported)
         source_name: Default source label
         limit: Max total results
         url_filter: Optional function(url) -> source_name or None
         delay: Seconds between queries to avoid rate limiting
 
     Returns:
-        Deduplicated list of post dicts
+        Deduplicated list of post dicts with real URLs
     """
     all_posts = []
-    per_query = max(5, limit // len(queries))
+    per_query = max(5, limit // max(len(queries), 1))
 
     for q in queries:
-        raw = bing_search(q, count=per_query)
+        raw = ddg_search(q, count=per_query)
 
         for item in raw:
-            href = item["url"]
+            real_url = item["url"]
 
             if url_filter:
-                label = url_filter(href)
+                label = url_filter(real_url)
                 if label is None:
                     continue
                 source = label
@@ -157,19 +174,26 @@ def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None, d
                 "source": source,
                 "title": item["title"],
                 "content": item["content"],
-                "url": href,
+                "url": real_url,
                 "author": "unknown",
             })
 
         if delay > 0:
-            time.sleep(delay + random.uniform(0, 0.2))
+            time.sleep(delay + random.uniform(0, 0.3))
 
-    # Deduplicate by URL
-    seen = set()
+    # Deduplicate by URL and by title
+    seen_urls = set()
+    seen_titles = set()
     unique = []
     for p in all_posts:
-        if p["url"] not in seen:
-            seen.add(p["url"])
-            unique.append(p)
+        url_key = p["url"].rstrip("/").lower()
+        title_key = p["title"].lower().strip()[:60]
+
+        if url_key in seen_urls or title_key in seen_titles:
+            continue
+
+        seen_urls.add(url_key)
+        seen_titles.add(title_key)
+        unique.append(p)
 
     return unique[:limit]

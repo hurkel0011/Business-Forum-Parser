@@ -2,14 +2,17 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.bigcommerce.com help OR issue OR broken OR error',
-    'wordpress.org/support/plugin/woocommerce "not working" OR broken OR error OR help',
-    'wordpress.org/support/plugin/woocommerce payment OR checkout OR shipping issue',
-    'community.magento.com issue OR error OR help OR broken OR fix',
-    'prestashop.com/forums help OR error OR broken OR issue OR bug',
-    'forum.squarespace.com "not working" OR broken OR help OR "custom code"',
-    'forum.squarespace.com developer OR CSS OR JavaScript OR integration',
-    'community.wix.com help OR broken OR issue OR "not working" OR bug',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com WooCommerce error OR broken OR "not working" OR help',
+    'site:reddit.com BigCommerce error OR broken OR "not working" OR help',
+    'site:reddit.com Magento error OR broken OR crash OR "not working" help',
+    'site:reddit.com Wix ecommerce OR store error OR broken OR "not working" help',
+    'site:reddit.com Squarespace store OR ecommerce error OR broken help',
+    # General complaint queries
+    'WooCommerce community error plugin checkout help',
+    'BigCommerce community error integration help',
+    'Magento community error extension migration help',
+    'Wix ecommerce community error broken help',
 ]
 
 
@@ -37,11 +40,9 @@ class EcommerceScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'community.bigcommerce.com {query}',
-                f'wordpress.org/support/plugin/woocommerce {query}',
-                f'community.magento.com {query}',
-                f'forum.squarespace.com {query}',
-                f'community.wix.com {query}',
+                f'site:reddit.com WooCommerce OR BigCommerce OR Magento {query}',
+                f'site:reddit.com Wix OR Squarespace ecommerce {query}',
+                f'WooCommerce OR BigCommerce OR Magento {query} community forum help',
             ]
         else:
             queries = QUERIES

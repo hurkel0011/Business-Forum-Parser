@@ -15,6 +15,7 @@ PAIN_SIGNALS = {
     "losing customers": 9, "deadline": 6, "urgent": 6,
     "emergency": 7, "blocking": 6, "showstopper": 8,
     "can't work": 7, "business impact": 8, "outage": 7,
+    "downtime": 6, "service disruption": 7,
 
     # Frustration
     "frustrated": 5, "broken": 4, "doesn't work": 5,
@@ -22,7 +23,9 @@ PAIN_SIGNALS = {
     "keeps crashing": 5, "keeps failing": 5, "unreliable": 4,
     "terrible": 4, "unusable": 6, "nightmare": 5,
     "pulling my hair": 5, "at my wits end": 6, "desperate": 7,
-    "last resort": 6, "fed up": 5,
+    "last resort": 6, "fed up": 5, "rage": 4,
+    "awful": 4, "garbage": 4, "waste of time": 5,
+    "deal breaker": 6, "unacceptable": 5,
 
     # Seeking help / willing to pay
     "help needed": 4, "any solution": 5, "anyone know": 3,
@@ -30,11 +33,16 @@ PAIN_SIGNALS = {
     "willing to pay": 9, "budget for": 8, "hire someone": 9,
     "need a developer": 9, "looking for freelancer": 9,
     "consulting": 6, "paid solution": 8,
+    "can anyone help": 5, "any workaround": 5,
+    "anyone else having": 4, "is there a fix": 5,
+    "how do i fix": 4, "stuck on": 3,
 
     # Migration / switching
     "switching from": 6, "looking for alternative": 6,
     "migrating from": 6, "replacing": 5, "moving away from": 6,
     "better alternative": 5, "competitor": 4,
+    "considering switching": 6, "about to cancel": 7,
+    "canceling subscription": 7,
 
     # Integration problems
     "integration": 4, "api issue": 5, "api broken": 6,
@@ -42,17 +50,28 @@ PAIN_SIGNALS = {
     "connector broken": 6, "integration broken": 7,
     "doesn't integrate": 5, "no integration": 4,
     "zapier": 4, "automation broken": 6,
+    "api error": 5, "api rate limit": 5, "oauth": 4,
+    "rest api": 4, "graphql": 3, "sdk": 3,
 
     # Workflow / process
     "manual process": 5, "time consuming": 4, "repetitive": 4,
     "workflow broken": 6, "bottleneck": 5, "inefficient": 4,
     "takes hours": 5, "need automation": 7, "automate": 5,
     "spreadsheet hell": 6, "copy paste": 4,
+    "tedious": 4, "workaround": 4, "hacky": 4,
 
     # Data problems
     "data loss": 7, "data migration": 5, "data export": 4,
     "data import": 4, "csv import": 3, "database issue": 5,
     "corrupt": 6, "data integrity": 5,
+    "lost data": 7, "backup failed": 6,
+
+    # Error messages (strong signal of real technical problems)
+    "error 500": 5, "error 502": 5, "error 503": 5,
+    "error 522": 5, "error 404": 3, "timeout": 4,
+    "stack trace": 4, "exception": 3, "traceback": 4,
+    "segfault": 5, "null pointer": 4, "memory leak": 5,
+    "crash report": 5,
 }
 
 BUSINESS_INDICATORS = {
@@ -67,6 +86,11 @@ BUSINESS_INDICATORS = {
     "crm": 3, "erp": 3, "salesforce": 4,
     "hubspot": 3, "quickbooks": 3, "shopify": 3,
     "microsoft teams": 3, "slack": 2, "jira": 3,
+    "zendesk": 3, "freshdesk": 3, "intercom": 3,
+    "stripe": 3, "paypal": 2, "square": 2,
+    "notion": 2, "airtable": 3, "monday.com": 3,
+    "production environment": 5, "staging": 3,
+    "deployment": 3, "ci/cd": 3, "pipeline": 3,
 }
 
 FIXABLE_MARKERS = {
@@ -77,15 +101,26 @@ FIXABLE_MARKERS = {
     "migration tool": 4, "converter": 3, "scraper": 3,
     "connector": 3, "middleware": 3, "bridge": 3,
     "custom solution": 5, "workaround": 3,
+    "configuration": 3, "settings": 2, "config": 2,
+    "workflow": 3, "template": 2, "form": 2,
+    "database": 3, "query": 2, "sql": 3,
+    "css": 2, "html": 2, "javascript": 3,
+    "python": 3, "node": 3, "react": 3,
 }
 
 NEGATIVE_SIGNALS = {
+    # Already resolved
     "solved": -5, "fixed it": -5, "nvm": -6, "never mind": -6,
     "figured it out": -5, "working now": -5, "resolved": -5,
+    "update: fixed": -6, "edit: solved": -6,
+    # Educational / not real problems
     "tutorial": -3, "how to": -2, "eli5": -3,
     "opinion": -3, "what do you think": -2, "discussion": -2,
     "meme": -6, "joke": -5, "shower thought": -6,
     "hiring": -2, "job posting": -3,
+    # Documentation / not a complaint
+    "documentation": -2, "changelog": -4, "release notes": -4,
+    "announcement": -3, "blog post": -2,
 }
 
 
@@ -111,21 +146,43 @@ def prescore(post):
 
     # Bonus for longer content (more detail = more real problem)
     content_len = len(post.get("content", ""))
+    if content_len > 300:
+        score += 1
     if content_len > 500:
         score += 2
     if content_len > 1000:
         score += 2
+    if content_len > 2000:
+        score += 1
 
     # Bonus for question marks (asking for help)
     question_marks = text.count("?")
-    if question_marks >= 2:
+    if question_marks >= 1:
+        score += 1
+    if question_marks >= 3:
+        score += 2
+
+    # Bonus for exclamation marks (frustration)
+    if text.count("!") >= 2:
+        score += 1
+
+    # Bonus for ALL CAPS words (frustration signal)
+    caps_words = len(re.findall(r'\b[A-Z]{4,}\b', post.get("content", "")))
+    if caps_words >= 2:
+        score += 2
+
+    # Bonus for forum/community source URLs
+    url = post.get("url", "").lower()
+    forum_signals = ["community.", "forum.", "discuss.", "support.",
+                     "reddit.com", "stackoverflow.com", "github.com/issues"]
+    if any(s in url for s in forum_signals):
         score += 2
 
     # Normalize to 0-10
     normalized = max(0, min(10, score / 4))
 
     post["_prescore"] = round(normalized, 1)
-    post["_matched_keywords"] = matched_keywords[:10]
+    post["_matched_keywords"] = matched_keywords[:15]
 
     return normalized
 

@@ -2,14 +2,16 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'fiverr.com fix OR repair OR debug website OR software OR app',
-    'fiverr.com build OR automate OR integrate OR migrate OR scrape',
-    'fiverr.com urgent OR ASAP developer OR programmer OR coder',
-    'peopleperhour.com fix OR build OR develop OR automate website OR software',
-    'peopleperhour.com API OR integration OR migration OR database',
-    'guru.com/jobs fix OR repair OR debug OR develop software OR website',
-    'guru.com/jobs automation OR integration OR migration OR scraping',
-    'bark.com "web developer" OR "software developer" OR "app developer"',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com hiring developer fix integration',
+    'site:reddit.com hiring developer fix OR repair OR debug software OR website',
+    'site:reddit.com hiring developer build OR automate OR integrate OR migrate',
+    'site:reddit.com hiring developer urgent OR ASAP project',
+    # General complaint queries
+    'Fiverr fix OR repair OR debug website OR software project',
+    'Fiverr build OR automate OR integrate coding project',
+    'PeoplePerHour fix OR build OR develop website OR software project',
+    'Guru fix OR develop OR automate software project',
 ]
 
 
@@ -33,9 +35,8 @@ class MoreFreelanceScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'fiverr.com {query}',
-                f'peopleperhour.com {query}',
-                f'guru.com {query}',
+                f'site:reddit.com hiring developer {query} fix integration',
+                f'Fiverr OR PeoplePerHour OR Guru {query} development project',
             ]
         else:
             queries = QUERIES

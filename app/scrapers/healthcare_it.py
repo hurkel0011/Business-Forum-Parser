@@ -2,13 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'userweb.epic.com error OR issue OR integration OR "not working"',
-    '"Epic EHR" OR "Epic Systems" broken OR issue OR integration OR API OR HL7',
-    '"Cerner" OR "Oracle Health" "not working" OR broken OR error OR integration',
-    'community.healthit.gov issue OR error OR "not working" OR help',
-    'reddit.com/r/healthIT broken OR error OR integration OR help OR need',
-    '"practice management" OR EHR OR EMR "not working" OR broken OR "need help" integration',
-    'HIPAA compliance tool OR software broken OR issue OR need OR help',
+    # Site-targeted: Reddit discussions (no major public community forums for healthcare IT)
+    'site:reddit.com "Epic EHR" OR "Epic Systems" error OR broken OR integration help',
+    'site:reddit.com Cerner OR "Oracle Health" error OR broken OR integration help',
+    'site:reddit.com eClinicalWorks error OR broken OR "not working" help',
+    'site:reddit.com Athenahealth error OR broken OR integration help',
+    'site:reddit.com EHR OR EMR integration OR migration OR "not working" help',
+    'site:reddit.com HL7 OR FHIR integration OR error OR broken help',
+    # General complaint queries
+    'Epic EHR community forum error help',
+    'Cerner community forum error integration help',
+    'eClinicalWorks community error workaround help',
+    'Athenahealth community error integration help',
 ]
 
 
@@ -30,9 +35,9 @@ class HealthcareITScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'"EHR" OR "healthcare IT" {query}',
-                f'reddit.com/r/healthIT {query}',
-                f'"medical software" {query}',
+                f'site:reddit.com "Epic EHR" OR Cerner OR eClinicalWorks {query}',
+                f'site:reddit.com EHR OR EMR {query} integration help',
+                f'Epic OR Cerner OR Athenahealth {query} community forum help',
             ]
         else:
             queries = QUERIES

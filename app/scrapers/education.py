@@ -2,13 +2,19 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.canvaslms.com "not working" OR error OR broken OR help',
-    'community.canvaslms.com integration OR API OR LTI OR sync',
-    'moodle.org/mod/forum error OR issue OR broken OR help OR plugin',
-    'community.anthology.com issue OR error OR "not working" OR help',
-    'support.google.com/edu "not working" OR issue OR error OR broken',
-    'community.teachable.com "not working" OR broken OR integration OR bug',
-    '"LMS" OR "learning management" broken OR "not working" OR "need help" integration OR API',
+    # Site-targeted: official community forums
+    'site:community.canvaslms.com error OR broken OR integration OR help',
+    'site:community.blackboard.com error OR broken OR integration OR help',
+    'site:moodle.org/mod/forum error OR broken OR plugin OR help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com "Canvas LMS" error OR broken OR "not working" OR help',
+    'site:reddit.com Blackboard error OR broken OR "not working" OR help',
+    'site:reddit.com Moodle error OR broken OR plugin OR help',
+    'site:reddit.com "Google Classroom" error OR broken OR integration help',
+    # General complaint queries
+    'Canvas LMS community error integration help',
+    'Moodle community error plugin help',
+    'Blackboard community error integration help',
 ]
 
 
@@ -34,9 +40,11 @@ class EducationScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'community.canvaslms.com {query}',
-                f'moodle.org/mod/forum {query}',
-                f'"LMS" OR "edtech" {query}',
+                f'site:community.canvaslms.com {query}',
+                f'site:community.blackboard.com {query}',
+                f'site:moodle.org/mod/forum {query}',
+                f'site:reddit.com "Canvas LMS" OR Moodle OR Blackboard {query}',
+                f'"Canvas LMS" OR Moodle OR Blackboard {query} community forum help',
             ]
         else:
             queries = QUERIES

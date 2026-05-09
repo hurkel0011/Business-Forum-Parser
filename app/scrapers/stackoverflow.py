@@ -2,12 +2,15 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'stackoverflow.com help OR error OR "not working" integration OR API',
-    'stackoverflow.com migration OR deployment OR authentication issue',
-    'stackoverflow.com automation OR database OR performance problem',
-    'superuser.com error OR "not working" OR broken software OR tool',
-    'serverfault.com error OR issue OR broken OR migration OR deploy',
-    'stackoverflow.com unanswered API OR integration OR automation OR webhook',
+    # Site-targeted: StackOverflow
+    'site:stackoverflow.com integration error broken help',
+    'site:stackoverflow.com API error OR "not working" OR broken help',
+    'site:stackoverflow.com migration OR deployment error OR issue help',
+    'site:stackoverflow.com automation OR webhook OR plugin error help',
+    'site:stackoverflow.com authentication OR database OR performance issue help',
+    # Site-targeted: other Stack Exchange sites
+    'site:superuser.com software error OR broken OR "not working" help',
+    'site:serverfault.com server OR deploy OR migration error help',
 ]
 
 
@@ -24,16 +27,16 @@ def _label(url):
 
 
 class StackOverflowScraper(BaseScraper):
-    """Stack Exchange sites — StackOverflow, SuperUser, ServerFault via Bing search."""
+    """Stack Exchange sites — StackOverflow, SuperUser, ServerFault."""
 
     name = "Stack Overflow"
 
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'stackoverflow.com {query}',
-                f'superuser.com {query}',
-                f'serverfault.com {query}',
+                f'site:stackoverflow.com {query} error help',
+                f'site:stackoverflow.com {query} integration issue',
+                f'site:superuser.com {query} error help',
             ]
         else:
             queries = QUERIES

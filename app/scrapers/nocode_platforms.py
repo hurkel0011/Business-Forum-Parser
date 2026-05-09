@@ -2,16 +2,21 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.airtable.com "not working" OR error OR broken OR help OR limitation',
-    'community.airtable.com automation OR integration OR API OR sync issue',
-    'community.zapier.com "not working" OR error OR broken OR help',
-    'community.zapier.com integration OR trigger OR action OR zap issue',
-    'community.make.com error OR "not working" OR broken OR help',
-    'forum.bubble.io bug OR error OR "not working" OR broken OR help',
-    'forum.bubble.io API OR plugin OR integration issue',
-    'reddit.com/r/Notion "not working" OR broken OR API OR integration OR automation',
-    '"monday.com" "not working" OR broken OR integration OR automation OR error OR API',
-    '"no-code" OR "low-code" limitation OR broken OR "need developer" OR custom OR workaround',
+    # Site-targeted: official community forums
+    'site:community.airtable.com error OR broken OR limitation OR help',
+    'site:community.zapier.com error OR broken OR "not working" OR help',
+    'site:community.make.com error OR broken OR scenario OR help',
+    'site:forum.bubble.io error OR broken OR bug OR help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Airtable error OR broken OR limitation OR help',
+    'site:reddit.com Zapier error OR broken OR "not working" OR help',
+    'site:reddit.com Make automation error OR broken OR help',
+    'site:reddit.com Bubble app error OR broken OR bug OR help',
+    'site:reddit.com Notion error OR broken OR API OR integration help',
+    # General complaint queries
+    'Airtable community error workaround help',
+    'Zapier community integration error help',
+    'Notion community error integration help',
 ]
 
 
@@ -39,10 +44,12 @@ class NoCodePlatformsScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'community.airtable.com {query}',
-                f'community.zapier.com {query}',
-                f'forum.bubble.io {query}',
-                f'"no-code" OR "low-code" {query}',
+                f'site:community.airtable.com {query}',
+                f'site:community.zapier.com {query}',
+                f'site:community.make.com {query}',
+                f'site:forum.bubble.io {query}',
+                f'site:reddit.com Airtable OR Zapier OR Make OR Notion {query}',
+                f'Airtable OR Zapier OR Notion {query} community forum help',
             ]
         else:
             queries = QUERIES

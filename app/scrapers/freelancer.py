@@ -2,12 +2,15 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'freelancer.com/projects fix OR repair OR debug website OR software OR app',
-    'freelancer.com/projects build OR develop OR create automation OR integration OR tool',
-    'freelancer.com/projects migrate OR convert OR transfer data OR website OR database',
-    'freelancer.com/projects API OR integration OR webhook OR sync OR connector',
-    'freelancer.com/projects urgent OR ASAP OR immediately developer OR programmer',
-    'freelancer.com/projects scraping OR automation OR bot OR script',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com freelance software project help needed',
+    'site:reddit.com freelance developer fix OR repair OR debug website OR software',
+    'site:reddit.com freelance automation OR integration OR custom tool build project',
+    'site:reddit.com freelance migration OR convert OR transfer data project',
+    'site:reddit.com freelance urgent developer OR programmer hire project',
+    # General complaint queries
+    'Freelancer.com fix OR repair OR debug website project',
+    'freelance developer needed software integration project',
 ]
 
 
@@ -24,7 +27,10 @@ class FreelancerScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'freelancer.com/projects {query}']
+            queries = [
+                f'site:reddit.com freelance {query} developer project help',
+                f'Freelancer.com {query} development project',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "Freelancer.com", limit, url_filter=_label)

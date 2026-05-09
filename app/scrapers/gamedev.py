@@ -2,13 +2,19 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'forum.unity.com bug OR error OR "not working" OR broken OR help',
-    'forum.unity.com integration OR plugin OR asset OR pipeline issue',
-    'forums.unrealengine.com bug OR error OR "not working" OR crash OR help',
-    'forum.godotengine.org bug OR error OR "not working" OR help OR issue',
-    'reddit.com/r/gamedev tool OR pipeline OR plugin broken OR "not working" OR need OR help',
-    '"Blender" OR "Adobe" plugin OR integration OR automation broken OR "not working" OR error',
-    'itch.io/community bug OR error OR "not working" OR broken OR help tool OR plugin',
+    # Site-targeted: official community forums
+    'site:discussions.unity.com error OR crash OR broken OR bug OR help',
+    'site:forums.unrealengine.com error OR crash OR broken OR bug OR help',
+    'site:forum.godotengine.org error OR crash OR broken OR bug OR help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Unity error OR crash OR broken OR bug help',
+    'site:reddit.com "Unreal Engine" error OR crash OR broken OR bug help',
+    'site:reddit.com Godot error OR crash OR broken OR bug help',
+    'site:reddit.com Blender error OR crash OR broken OR plugin help',
+    # General complaint queries
+    'Unity community error plugin pipeline help',
+    'Unreal Engine community error build pipeline help',
+    'Godot community error export build help',
 ]
 
 
@@ -34,9 +40,11 @@ class GameDevScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'forum.unity.com {query}',
-                f'forums.unrealengine.com {query}',
-                f'"game dev" OR "game development" {query}',
+                f'site:discussions.unity.com {query}',
+                f'site:forums.unrealengine.com {query}',
+                f'site:forum.godotengine.org {query}',
+                f'site:reddit.com Unity OR "Unreal Engine" OR Godot {query}',
+                f'Unity OR "Unreal Engine" OR Godot {query} community forum help',
             ]
         else:
             queries = QUERIES

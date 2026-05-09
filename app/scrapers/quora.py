@@ -2,12 +2,13 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'quora.com "best alternative to" software OR saas OR tool',
-    'quora.com "frustrated with" OR "problems with" software business',
-    'quora.com "how to fix" OR "how to automate" business process workflow',
-    'quora.com "need developer" OR "hire freelancer" OR "build a tool"',
-    'quora.com "data migration" OR "integration problem" OR "API issue" business',
-    'quora.com "small business" software "doesn\'t work" OR broken OR issue',
+    # Site-targeted: Quora
+    'site:quora.com software broken integration fix',
+    'site:quora.com software "not working" OR broken OR "best alternative to" help',
+    'site:quora.com "frustrated with" OR "problems with" software OR SaaS',
+    'site:quora.com "how to fix" OR "how to automate" business OR workflow',
+    'site:quora.com "need developer" OR "hire freelancer" software OR tool',
+    'site:quora.com "small business" software broken OR issue OR help',
 ]
 
 
@@ -24,7 +25,10 @@ class QuoraScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'quora.com {query}']
+            queries = [
+                f'site:quora.com {query} software broken fix',
+                f'site:quora.com {query} software help',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "Quora", limit, url_filter=_label)

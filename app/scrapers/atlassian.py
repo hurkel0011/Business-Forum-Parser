@@ -2,12 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'community.atlassian.com Jira "not working" OR broken OR error OR bug',
-    'community.atlassian.com Confluence help OR issue OR fix OR migrate',
-    'community.atlassian.com integration OR API OR webhook OR automation',
-    'community.atlassian.com workflow OR "custom field" OR plugin OR marketplace',
-    'community.atlassian.com Bitbucket OR pipeline error OR broken OR "doesn\'t work"',
-    'community.atlassian.com "need help" OR urgent OR "anyone know how"',
+    # Site-targeted: official community forum
+    'site:community.atlassian.com Jira error OR broken OR "not working" OR help',
+    'site:community.atlassian.com Confluence error OR broken OR migration OR help',
+    'site:community.atlassian.com Bitbucket pipeline OR error OR broken OR help',
+    'site:community.atlassian.com workflow OR plugin OR automation issue OR bug',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com Jira error OR broken OR "not working" OR help',
+    'site:reddit.com Confluence error OR broken OR migration OR help',
+    'site:reddit.com Bitbucket pipeline OR error OR broken OR help',
+    # General complaint queries
+    'Jira community error workflow help',
+    'Confluence community error plugin help',
 ]
 
 
@@ -24,7 +30,11 @@ class AtlassianScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         if query:
-            queries = [f'community.atlassian.com {query}']
+            queries = [
+                f'site:community.atlassian.com {query}',
+                f'site:reddit.com Jira OR Confluence OR Bitbucket {query}',
+                f'Jira OR Confluence OR Bitbucket {query} community forum help',
+            ]
         else:
             queries = QUERIES
         return multi_domain_search(queries, "Atlassian", limit, url_filter=_label)

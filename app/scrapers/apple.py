@@ -2,12 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'discussions.apple.com "data migration" OR transfer OR "lost files" OR backup',
-    'discussions.apple.com "app doesn\'t work" OR crash OR bug OR broken',
-    'discussions.apple.com automation OR shortcut OR script OR Automator',
-    'discussions.apple.com enterprise OR MDM OR deployment OR management',
-    'developer.apple.com/forums API OR integration OR bug OR workaround',
-    'developer.apple.com/forums help OR issue OR error OR crash OR rejected',
+    # Site-targeted: official developer forums
+    'site:developer.apple.com/forums error OR crash OR broken OR bug help',
+    'site:developer.apple.com/forums Xcode OR API OR SDK OR framework issue help',
+    'site:developer.apple.com/forums migration OR provisioning OR deployment issue help',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com iOS development error OR crash OR broken OR bug help',
+    'site:reddit.com Xcode error OR crash OR broken OR "not working" help',
+    'site:reddit.com Apple developer API OR SDK OR framework issue help',
+    'site:reddit.com Apple enterprise MDM OR deployment OR provisioning error help',
+    # General complaint queries
+    'Apple developer community error Xcode help',
+    'iOS development community error crash help',
 ]
 
 
@@ -27,8 +33,9 @@ class AppleScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'discussions.apple.com {query}',
-                f'developer.apple.com/forums {query}',
+                f'site:developer.apple.com/forums {query}',
+                f'site:reddit.com iOS development OR Xcode OR Apple {query}',
+                f'Apple developer {query} community forum help',
             ]
         else:
             queries = QUERIES

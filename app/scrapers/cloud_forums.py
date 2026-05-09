@@ -2,14 +2,20 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    'digitalocean.com/community help OR error OR "not working" OR broken',
-    'digitalocean.com/community migration OR deploy OR SSL OR DNS issue',
-    'community.cloudflare.com issue OR error OR "not working" OR blocked',
-    'community.cloudflare.com help OR need OR workaround',
-    'repost.aws error OR issue OR help OR "not working"',
-    'repost.aws migration OR lambda OR S3 OR EC2 problem',
-    'answers.netlify.com deploy OR build OR error OR broken OR help',
-    'vercel next.js discussions bug OR help OR error OR issue',
+    # Site-targeted: official community forums
+    'site:community.digitalocean.com error OR broken OR help OR issue',
+    'site:community.cloudflare.com error OR broken OR help OR issue',
+    'site:repost.aws.amazon.com error OR broken OR help OR issue',
+    # Site-targeted: Reddit discussions
+    'site:reddit.com DigitalOcean error OR broken OR "not working" OR help',
+    'site:reddit.com Cloudflare error OR broken OR "not working" OR help',
+    'site:reddit.com AWS error OR broken OR migration OR deploy help',
+    'site:reddit.com Netlify deploy OR build OR error OR broken help',
+    'site:reddit.com Vercel error OR broken OR deploy OR "not working" help',
+    # StackOverflow
+    'site:stackoverflow.com DigitalOcean deploy error',
+    'site:stackoverflow.com Cloudflare error fix',
+    'site:stackoverflow.com AWS lambda S3 error',
 ]
 
 
@@ -18,11 +24,11 @@ def _label(url):
         return "DigitalOcean"
     if "cloudflare.com" in url:
         return "Cloudflare"
-    if "repost.aws" in url or "aws.amazon" in url:
+    if "repost.aws" in url or "aws.amazon" in url or "aws" in url:
         return "AWS"
     if "netlify.com" in url:
         return "Netlify"
-    if "vercel" in url or "next.js" in url:
+    if "vercel" in url or "next.js" in url or "nextjs" in url:
         return "Vercel"
     return "Cloud"
 
@@ -35,9 +41,11 @@ class CloudForumsScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'digitalocean.com/community {query}',
-                f'community.cloudflare.com {query}',
-                f'repost.aws {query}',
+                f'site:community.digitalocean.com {query}',
+                f'site:community.cloudflare.com {query}',
+                f'site:repost.aws.amazon.com {query}',
+                f'site:reddit.com DigitalOcean OR Cloudflare OR AWS OR Netlify OR Vercel {query}',
+                f'DigitalOcean OR Cloudflare OR AWS {query} community forum help',
             ]
         else:
             queries = QUERIES
