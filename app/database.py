@@ -81,7 +81,21 @@ class Database:
             if col_name not in existing:
                 self.conn.execute(f"ALTER TABLE leads ADD COLUMN {col_name} {col_def}")
 
+    def url_exists(self, url):
+        """Check if a lead with this URL already exists."""
+        if not url:
+            return False
+        row = self.conn.execute(
+            "SELECT COUNT(*) FROM leads WHERE url = ?", (url,)
+        ).fetchone()
+        return row[0] > 0
+
     def add_lead(self, lead_data):
+        # Skip duplicates by URL
+        url = lead_data.get("url", "")
+        if url and self.url_exists(url):
+            return None
+
         cursor = self.conn.execute(
             """INSERT INTO leads
                (source, title, url, author, content, severity,

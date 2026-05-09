@@ -272,6 +272,15 @@ class ScraperFrame(ctk.CTkFrame):
                 self._ui(lambda e=enriched_count: self._log(f"  Enriched {e} posts with full content"))
                 candidates = to_enrich + candidates[50:]
 
+            # ── PRE-CLASSIFY: Remove duplicates already in DB ─────
+            before_dedup = len(candidates)
+            candidates = [p for p in candidates if not self.db.url_exists(p.get("url", ""))]
+            dupes_skipped = before_dedup - len(candidates)
+            if dupes_skipped > 0:
+                self._ui(lambda d=dupes_skipped: self._log(
+                    f"  Skipped {d} posts already in database"
+                ))
+
             # ── PHASE 4: CLASSIFY (Claude API) ───────────────────
             self._ui(lambda n=len(candidates): self._log(
                 f"\n━━━ PHASE 4: Classifying {n} posts with Claude ━━━\n"
@@ -303,12 +312,17 @@ class ScraperFrame(ctk.CTkFrame):
                     score = post.get("lead_score", 0)
 
                     if score >= min_score:
-                        self.db.add_lead(post)
-                        leads_added += 1
-                        sev = post.get("severity", "?").upper()
-                        self._ui(lambda s=score, sv=sev, p=post: self._log(
-                            f"  ✓ score={s} [{sv}] {p['title'][:55]}"
-                        ))
+                        lead_id = self.db.add_lead(post)
+                        if lead_id is None:
+                            self._ui(lambda p=post: self._log(
+                                f"  ↩ duplicate | {p['title'][:55]}"
+                            ))
+                        else:
+                            leads_added += 1
+                            sev = post.get("severity", "?").upper()
+                            self._ui(lambda s=score, sv=sev, p=post: self._log(
+                                f"  ✓ score={s} [{sv}] {p['title'][:55]}"
+                            ))
                     else:
                         self._ui(lambda s=score, p=post: self._log(
                             f"  · skip score={s} | {p['title'][:55]}"
