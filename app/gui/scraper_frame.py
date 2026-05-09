@@ -41,7 +41,7 @@ from ..scrapers.legal_tech import LegalTechScraper
 from ..scrapers.real_estate_tech import RealEstateTechScraper
 from ..scrapers.gamedev import GameDevScraper
 from ..scrapers.nocode_platforms import NoCodePlatformsScraper
-from ..scrapers.enricher import enrich_post
+from ..scrapers.enricher import enrich_post, batch_enrich
 from ..prescorer import batch_prescore
 from ..classifier import LeadClassifier
 
@@ -318,7 +318,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.5.0", query or "wide search", len(all_posts), leads_added
+                "v1.5.2", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)

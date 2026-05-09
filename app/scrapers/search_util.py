@@ -48,7 +48,9 @@ JUNK_DOMAINS = {
 JUNK_TITLE_PATTERNS = re.compile(
     r"^(log ?in|sign ?in|sign ?up|create account|pricing|about us|"
     r"contact us|home ?page|wikipedia|definition|meaning|"
-    r"what is .{0,20}\?$)",
+    r"what is .{0,20}\?$|"
+    r"get help with|welcome to|getting started|"
+    r"troubleshooting \|)",  # category/index pages like "Troubleshooting | Zapier"
     re.IGNORECASE,
 )
 
@@ -79,6 +81,15 @@ def _is_junk(url, title):
     # Skip marketing/product pages
     marketing_signals = ["pricing", "features", "get started", "free trial", "demo"]
     if any(s in title_lower for s in marketing_signals):
+        return True
+
+    # Skip forum category/index pages (not actual posts)
+    # These have generic titles like "Get Help", "APIs & Integrations", "Troubleshooting"
+    category_signals = [
+        "help and faq", "help center", "knowledge base",
+        "ask your questions here", "customer service",
+    ]
+    if any(s in title_lower for s in category_signals):
         return True
 
     return False
