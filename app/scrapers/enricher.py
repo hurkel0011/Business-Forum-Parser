@@ -98,17 +98,34 @@ def _extract_text(soup):
     return ""
 
 
+# URL patterns that indicate category/index pages (not individual posts)
+_INDEX_PAGE_PATTERNS = [
+    "/bd-p/",          # Lithium/Khoros board pages
+    "/ct-p/",          # Lithium category pages
+    "/categories",     # Forum category listings
+    "/forums/",        # Forum index (not specific post)
+    "/tags/",          # Tag listings
+    "/page/",          # Pagination pages
+]
+
+
 def enrich_post(post):
     """Fetch full page content for a post to give the classifier more text.
 
     Only fetches if existing content is short (< 500 chars).
     Extracts main content using community-forum-specific CSS selectors.
+    Skips known category/index pages that aren't individual complaints.
     """
     url = post.get("url", "")
     existing_content = post.get("content", "")
 
     # Skip if we already have enough content or no URL
     if not url or len(existing_content) > 500:
+        return post
+
+    # Skip category/index pages — they contain many posts, not one complaint
+    url_lower = url.lower()
+    if any(p in url_lower for p in _INDEX_PAGE_PATTERNS):
         return post
 
     try:

@@ -84,12 +84,27 @@ def _is_junk(url, title):
         return True
 
     # Skip forum category/index pages (not actual posts)
-    # These have generic titles like "Get Help", "APIs & Integrations", "Troubleshooting"
     category_signals = [
         "help and faq", "help center", "knowledge base",
         "ask your questions here", "customer service",
     ]
     if any(s in title_lower for s in category_signals):
+        return True
+
+    # Skip official documentation / knowledge base URLs (not user complaints)
+    doc_url_patterns = [
+        "/hc/en-us/articles/",  # Zendesk help center articles
+        "/hc/en-us/categories/",
+        "knowledge.hubspot.com",
+        "help.salesforce.com/s/",
+        "docs.github.com",
+        "developer.zendesk.com",
+        "developers.cloudflare.com",
+        "learn.microsoft.com",
+        "docs.aws.amazon.com",
+        "docs.digitalocean.com",
+    ]
+    if any(p in url_lower for p in doc_url_patterns):
         return True
 
     return False
