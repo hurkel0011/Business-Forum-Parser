@@ -9,11 +9,11 @@ QUERIES = [
     'site:reddit.com BambooHR error OR broken OR "not working" OR integration help',
     'site:reddit.com ADP payroll error OR broken OR "not working" OR sync help',
     'site:reddit.com Greenhouse ATS error OR broken OR integration help',
-    # General complaint queries
-    'Workday community error integration help',
-    'BambooHR community error sync help',
-    'ADP payroll community error integration help',
-    'Greenhouse ATS community error help',
+    # Site-targeted: more Reddit HR queries
+    'site:reddit.com Workday broken OR integration OR migration OR workaround help',
+    'site:reddit.com BambooHR broken OR sync OR "not working" OR error help',
+    'site:reddit.com ADP payroll broken OR sync OR integration OR error help',
+    'site:reddit.com Greenhouse ATS broken OR integration OR error help',
 ]
 
 

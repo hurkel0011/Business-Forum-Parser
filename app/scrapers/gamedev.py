@@ -11,10 +11,10 @@ QUERIES = [
     'site:reddit.com "Unreal Engine" error OR crash OR broken OR bug help',
     'site:reddit.com Godot error OR crash OR broken OR bug help',
     'site:reddit.com Blender error OR crash OR broken OR plugin help',
-    # General complaint queries
-    'Unity community error plugin pipeline help',
-    'Unreal Engine community error build pipeline help',
-    'Godot community error export build help',
+    # Site-targeted: more Reddit and forum queries
+    'site:reddit.com Unity plugin OR pipeline OR shader error OR broken help',
+    'site:reddit.com "Unreal Engine" build OR pipeline OR packaging error help',
+    'site:reddit.com Godot export OR build OR GDScript error OR broken help',
 ]
 
 

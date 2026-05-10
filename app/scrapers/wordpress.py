@@ -12,10 +12,10 @@ QUERIES = [
     'site:reddit.com WooCommerce error OR broken OR "not working" OR help',
     'site:reddit.com WordPress plugin OR theme broken OR error help',
     'site:reddit.com Elementor error OR broken OR "not working" help',
-    # General complaint queries
-    'WordPress community error broken plugin help',
-    'WooCommerce community error checkout help',
-    'Elementor community error broken help',
+    # Site-targeted: more WordPress queries
+    'site:wordpress.org/support WooCommerce OR checkout OR payment error help',
+    'site:reddit.com WooCommerce checkout OR payment OR shipping error help',
+    'site:reddit.com Elementor broken OR error OR crash OR "not working" help',
 ]
 
 

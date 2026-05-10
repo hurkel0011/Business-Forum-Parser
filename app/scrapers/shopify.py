@@ -11,9 +11,9 @@ QUERIES = [
     'site:reddit.com Shopify error OR broken OR "not working" OR help',
     'site:reddit.com Shopify app OR theme OR checkout broken OR error help',
     'site:reddit.com Shopify migration OR "moving from" OR "switch to" help',
-    # General complaint queries
-    'Shopify community error broken help',
-    'Shopify community integration API help',
+    # Site-targeted: more Shopify queries
+    'site:community.shopify.com migration OR "moving from" OR theme OR app error help',
+    'site:reddit.com Shopify integration OR API OR sync OR broken error help',
 ]
 
 

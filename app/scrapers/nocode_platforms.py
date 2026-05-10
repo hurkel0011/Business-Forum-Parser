@@ -13,10 +13,10 @@ QUERIES = [
     'site:reddit.com Make automation error OR broken OR help',
     'site:reddit.com Bubble app error OR broken OR bug OR help',
     'site:reddit.com Notion error OR broken OR API OR integration help',
-    # General complaint queries
-    'Airtable community error workaround help',
-    'Zapier community integration error help',
-    'Notion community error integration help',
+    # Site-targeted: more Reddit no-code queries
+    'site:reddit.com Airtable workaround OR limitation OR broken OR error help',
+    'site:reddit.com Zapier integration OR broken OR "not working" OR error help',
+    'site:reddit.com Notion integration OR API OR broken OR error help',
 ]
 
 

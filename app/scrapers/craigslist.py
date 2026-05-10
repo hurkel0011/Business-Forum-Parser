@@ -7,9 +7,9 @@ QUERIES = [
     'site:reddit.com need developer fix website OR app OR integration',
     'site:reddit.com "looking for developer" OR "need programmer" fix OR build OR automate',
     'site:reddit.com small business software fix OR repair OR build hire',
-    # General complaint queries
-    'Craigslist computer gigs developer fix website software',
-    'Craigslist developer programmer hire fix build project',
+    # Site-targeted: Reddit forhire and gig queries
+    'site:reddit.com/r/forhire developer fix OR build OR automate project',
+    'site:reddit.com "need developer" OR "need programmer" fix OR build OR repair website OR software',
 ]
 
 

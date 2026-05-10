@@ -8,11 +8,11 @@ QUERIES = [
     'site:reddit.com Propertybase error OR broken OR integration OR help',
     'site:reddit.com Zillow OR Realtor.com API OR integration OR error help',
     'site:reddit.com MLS OR IDX integration OR "not working" OR broken OR error help',
-    # General complaint queries
-    'kvCORE community error integration help',
-    'Propertybase community error integration help',
-    'real estate tech software community error workaround help',
-    'MLS IDX integration error community help',
+    # Site-targeted: more Reddit real estate tech queries
+    'site:reddit.com kvCORE broken OR integration OR sync OR error help',
+    'site:reddit.com Propertybase broken OR integration OR sync OR error help',
+    'site:reddit.com "real estate" software OR CRM broken OR error OR workaround help',
+    'site:reddit.com MLS OR IDX integration OR sync OR broken OR error help',
 ]
 
 

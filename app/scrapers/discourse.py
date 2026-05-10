@@ -26,9 +26,9 @@ QUERIES = [
     'site:community.monday.com error OR broken OR integration OR help',
     'site:discourse.webflow.com error OR broken OR bug OR help',
     'site:community.retool.com error OR broken OR integration OR help',
-    # General complaint queries
-    'Discourse community error plugin help',
-    'Webflow community error broken help',
+    # Site-targeted: more community forums
+    'site:meta.discourse.org migration OR upgrade OR deploy error help',
+    'site:reddit.com Webflow error OR broken OR "not working" help',
 ]
 
 

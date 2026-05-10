@@ -2,17 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    # Site-targeted: Reddit discussions
-    'site:reddit.com WooCommerce error OR broken OR "not working" OR help',
-    'site:reddit.com BigCommerce error OR broken OR "not working" OR help',
-    'site:reddit.com Magento error OR broken OR crash OR "not working" help',
-    'site:reddit.com Wix ecommerce OR store error OR broken OR "not working" help',
-    'site:reddit.com Squarespace store OR ecommerce error OR broken help',
-    # General complaint queries
-    'WooCommerce community error plugin checkout help',
-    'BigCommerce community error integration help',
-    'Magento community error extension migration help',
-    'Wix ecommerce community error broken help',
+    # Reddit — ecommerce pain
+    'site:reddit.com WooCommerce error OR broken OR "not working" OR plugin',
+    'site:reddit.com WooCommerce checkout OR payment OR shipping broken',
+    'site:reddit.com BigCommerce error OR broken OR "not working" OR integration',
+    'site:reddit.com Magento error OR broken OR crash OR performance',
+    'site:reddit.com Wix ecommerce OR store error OR broken',
+    'site:reddit.com Squarespace ecommerce error OR broken OR "not working"',
+    # StackOverflow
+    'site:stackoverflow.com WooCommerce plugin error broken',
+    'site:stackoverflow.com Magento error integration API',
+    # Official communities
+    'site:community.bigcommerce.com error OR broken OR integration',
 ]
 
 
@@ -29,6 +30,10 @@ def _label(url):
         return "PrestaShop"
     if "wix.com" in url:
         return "Wix"
+    if "reddit.com" in url:
+        return "eCommerce"
+    if "stackoverflow.com" in url:
+        return "eCommerce"
     return "eCommerce"
 
 
@@ -40,9 +45,9 @@ class EcommerceScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'site:reddit.com WooCommerce OR BigCommerce OR Magento {query}',
-                f'site:reddit.com Wix OR Squarespace ecommerce {query}',
-                f'WooCommerce OR BigCommerce OR Magento {query} community forum help',
+                f'site:reddit.com WooCommerce {query}',
+                f'site:reddit.com BigCommerce OR Magento {query}',
+                f'site:stackoverflow.com WooCommerce OR Magento {query}',
             ]
         else:
             queries = QUERIES

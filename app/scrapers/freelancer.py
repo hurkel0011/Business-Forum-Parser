@@ -8,9 +8,9 @@ QUERIES = [
     'site:reddit.com freelance automation OR integration OR custom tool build project',
     'site:reddit.com freelance migration OR convert OR transfer data project',
     'site:reddit.com freelance urgent developer OR programmer hire project',
-    # General complaint queries
-    'Freelancer.com fix OR repair OR debug website project',
-    'freelance developer needed software integration project',
+    # Site-targeted: more Reddit freelance queries
+    'site:reddit.com/r/forhire freelance developer fix OR build OR debug project',
+    'site:reddit.com freelance developer needed software OR integration OR automation project',
 ]
 
 

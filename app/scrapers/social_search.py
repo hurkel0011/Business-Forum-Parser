@@ -10,9 +10,9 @@ QUERIES = [
     # Site-targeted: other social
     'site:linkedin.com "frustrated with" OR broken software OR SaaS post',
     'site:linkedin.com "software problem" OR "integration issue" OR broken post',
-    # General complaint queries
-    'Facebook group small business software issue OR help',
-    'Twitter software broken complaint "need developer" help',
+    # Site-targeted: more Reddit social queries
+    'site:reddit.com small business software issue OR broken OR "need help" fix',
+    'site:reddit.com SaaS OR software complaint OR broken "need developer" OR "looking for developer" help',
 ]
 
 

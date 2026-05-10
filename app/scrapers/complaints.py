@@ -12,9 +12,9 @@ QUERIES = [
     'site:sitejabber.com software OR SaaS broken OR terrible OR "doesn\'t work"',
     'site:pissedconsumer.com software OR app OR service broken OR terrible',
     'site:consumeraffairs.com software OR technology broken OR "not working" OR issue',
-    # General complaint queries
-    'BBB software complaint broken help',
-    'consumer complaint software broken terrible review',
+    # Site-targeted: more Reddit complaint queries
+    'site:reddit.com software complaint frustrated "need fix" OR "need developer" help',
+    'site:reddit.com small business software broken OR terrible OR "doesn\'t work" help',
 ]
 
 

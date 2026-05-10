@@ -8,11 +8,11 @@ QUERIES = [
     'site:reddit.com MyCase error OR broken OR "not working" help',
     'site:reddit.com LawPay error OR broken OR billing OR integration help',
     'site:reddit.com "legal tech" OR "practice management" software error OR broken help',
-    # General complaint queries
-    'Clio community error integration help',
-    'PracticePanther community error billing help',
-    'MyCase community error sync help',
-    '"legal software" community error workaround help',
+    # Site-targeted: more Reddit legal tech queries
+    'site:reddit.com Clio broken OR integration OR sync OR workaround help',
+    'site:reddit.com PracticePanther broken OR billing OR sync OR error help',
+    'site:reddit.com MyCase broken OR sync OR "not working" OR error help',
+    'site:reddit.com "legal software" OR "practice management" broken OR error OR workaround help',
 ]
 
 

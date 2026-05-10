@@ -11,9 +11,9 @@ QUERIES = [
     'site:reddit.com Jira error OR broken OR "not working" OR help',
     'site:reddit.com Confluence error OR broken OR migration OR help',
     'site:reddit.com Bitbucket pipeline OR error OR broken OR help',
-    # General complaint queries
-    'Jira community error workflow help',
-    'Confluence community error plugin help',
+    # Site-targeted: StackOverflow
+    'site:stackoverflow.com Jira API error OR broken OR workflow help',
+    'site:stackoverflow.com Confluence API error OR plugin OR macro help',
 ]
 
 

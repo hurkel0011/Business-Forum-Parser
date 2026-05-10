@@ -11,9 +11,9 @@ QUERIES = [
     'site:reddit.com Xcode error OR crash OR broken OR "not working" help',
     'site:reddit.com Apple developer API OR SDK OR framework issue help',
     'site:reddit.com Apple enterprise MDM OR deployment OR provisioning error help',
-    # General complaint queries
-    'Apple developer community error Xcode help',
-    'iOS development community error crash help',
+    # Site-targeted: StackOverflow
+    'site:reddit.com Xcode error OR crash OR "build failed" OR broken help',
+    'site:reddit.com Swift OR SwiftUI error OR crash OR broken help',
 ]
 
 

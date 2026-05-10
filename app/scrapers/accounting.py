@@ -2,17 +2,18 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    # Site-targeted: Reddit discussions
-    'site:reddit.com QuickBooks error OR broken OR "not working" OR help',
-    'site:reddit.com QuickBooks integration OR sync OR import OR export help',
-    'site:reddit.com Xero error OR broken OR "not working" OR help',
-    'site:reddit.com Xero integration OR sync OR "bank feed" OR API help',
-    'site:reddit.com FreshBooks error OR broken OR "not working" OR help',
-    # General complaint queries
-    'QuickBooks community error integration help',
-    'Xero community error sync help',
-    'FreshBooks community error invoice help',
-    'Sage accounting community error migration help',
+    # Reddit — accounting software pain
+    'site:reddit.com QuickBooks error OR broken OR "not working" OR frustrated',
+    'site:reddit.com QuickBooks integration OR sync OR import failed',
+    'site:reddit.com Xero error OR broken OR "not working" OR sync issue',
+    'site:reddit.com Xero integration OR API OR "bank feed" broken',
+    'site:reddit.com FreshBooks error OR broken OR "not working"',
+    'site:reddit.com Sage accounting error OR broken OR migration',
+    # StackOverflow
+    'site:stackoverflow.com QuickBooks API integration error',
+    'site:stackoverflow.com Xero API integration error',
+    # Official community
+    'site:quickbooks.intuit.com community error integration',
 ]
 
 
@@ -27,6 +28,10 @@ def _label(url):
         return "Wave"
     if "sage.com" in url:
         return "Sage"
+    if "reddit.com" in url:
+        return "Accounting"
+    if "stackoverflow.com" in url:
+        return "Accounting"
     return "Accounting"
 
 
@@ -38,9 +43,9 @@ class AccountingScraper(BaseScraper):
     def scrape(self, config, query=None, limit=50):
         if query:
             queries = [
-                f'site:reddit.com QuickBooks OR Xero OR FreshBooks {query}',
-                f'QuickBooks OR Xero OR FreshBooks {query} community forum help',
-                f'Sage accounting {query} community forum help',
+                f'site:reddit.com QuickBooks {query}',
+                f'site:reddit.com Xero OR FreshBooks {query}',
+                f'site:stackoverflow.com QuickBooks OR Xero {query}',
             ]
         else:
             queries = QUERIES

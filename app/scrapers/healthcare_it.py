@@ -9,11 +9,11 @@ QUERIES = [
     'site:reddit.com Athenahealth error OR broken OR integration help',
     'site:reddit.com EHR OR EMR integration OR migration OR "not working" help',
     'site:reddit.com HL7 OR FHIR integration OR error OR broken help',
-    # General complaint queries
-    'Epic EHR community forum error help',
-    'Cerner community forum error integration help',
-    'eClinicalWorks community error workaround help',
-    'Athenahealth community error integration help',
+    # Site-targeted: more Reddit healthcare IT queries
+    'site:reddit.com "Epic EHR" OR "Epic Systems" integration OR migration OR workaround help',
+    'site:reddit.com Cerner OR "Oracle Health" integration OR migration OR workaround help',
+    'site:reddit.com eClinicalWorks broken OR workaround OR migration help',
+    'site:reddit.com Athenahealth broken OR integration OR workaround help',
 ]
 
 

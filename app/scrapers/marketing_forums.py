@@ -8,11 +8,11 @@ QUERIES = [
     'site:reddit.com Klaviyo error OR broken OR "not working" OR integration help',
     'site:reddit.com SEMrush OR Ahrefs error OR broken OR "not working" help',
     'site:reddit.com Moz SEO error OR broken OR "not working" help',
-    # General complaint queries
-    'Mailchimp community error automation help',
-    'ActiveCampaign community error integration help',
-    'Klaviyo community error integration help',
-    'Moz SEO community error crawl help',
+    # Site-targeted: more Reddit marketing queries
+    'site:reddit.com Mailchimp automation OR deliverability OR sync error help',
+    'site:reddit.com ActiveCampaign integration OR automation OR sync error help',
+    'site:reddit.com Klaviyo integration OR sync OR "not working" error help',
+    'site:reddit.com Moz OR SEMrush SEO crawl OR audit OR rank error help',
 ]
 
 

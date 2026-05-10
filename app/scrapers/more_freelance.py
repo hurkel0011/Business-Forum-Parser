@@ -7,11 +7,11 @@ QUERIES = [
     'site:reddit.com hiring developer fix OR repair OR debug software OR website',
     'site:reddit.com hiring developer build OR automate OR integrate OR migrate',
     'site:reddit.com hiring developer urgent OR ASAP project',
-    # General complaint queries
-    'Fiverr fix OR repair OR debug website OR software project',
-    'Fiverr build OR automate OR integrate coding project',
-    'PeoplePerHour fix OR build OR develop website OR software project',
-    'Guru fix OR develop OR automate software project',
+    # Site-targeted: more Reddit freelance platform queries
+    'site:reddit.com Fiverr developer fix OR repair OR debug website OR software',
+    'site:reddit.com Fiverr developer build OR automate OR integrate project',
+    'site:reddit.com PeoplePerHour developer fix OR build OR develop project',
+    'site:reddit.com Guru developer fix OR develop OR automate project',
 ]
 
 

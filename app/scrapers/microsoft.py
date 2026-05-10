@@ -12,10 +12,10 @@ QUERIES = [
     'site:reddit.com Office365 OR "Office 365" error OR broken OR "not working" help',
     'site:reddit.com Microsoft Teams error OR broken OR "not working" help',
     'site:reddit.com SharePoint OR OneDrive error OR broken OR integration help',
-    # General complaint queries
-    'Microsoft community error workaround help',
-    'Azure community error deploy migration help',
-    'Office 365 community error broken help',
+    # Site-targeted: more Microsoft queries
+    'site:answers.microsoft.com Windows OR Teams OR Outlook error OR crash OR workaround help',
+    'site:reddit.com Azure deploy OR migration OR error OR broken help',
+    'site:reddit.com "Office 365" OR Microsoft365 error OR broken OR "not working" help',
 ]
 
 

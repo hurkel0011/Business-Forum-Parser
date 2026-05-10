@@ -11,9 +11,9 @@ QUERIES = [
     'site:reddit.com sysadmin IT software error OR broken OR "not working" help',
     'site:reddit.com sysadmin network OR server OR firewall OR VPN issue help',
     'site:reddit.com sysadmin automation OR script OR migration help',
-    # General complaint queries
-    'Spiceworks community IT error help',
-    'sysadmin community software error workaround help',
+    # Site-targeted: more Spiceworks and Reddit queries
+    'site:community.spiceworks.com software OR tool error OR broken OR workaround help',
+    'site:reddit.com/r/sysadmin software OR tool error OR broken OR workaround help',
 ]
 
 

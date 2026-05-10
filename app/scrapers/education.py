@@ -11,10 +11,10 @@ QUERIES = [
     'site:reddit.com Blackboard error OR broken OR "not working" OR help',
     'site:reddit.com Moodle error OR broken OR plugin OR help',
     'site:reddit.com "Google Classroom" error OR broken OR integration help',
-    # General complaint queries
-    'Canvas LMS community error integration help',
-    'Moodle community error plugin help',
-    'Blackboard community error integration help',
+    # Site-targeted: more Reddit education queries
+    'site:reddit.com "Canvas LMS" broken OR integration OR sync error help',
+    'site:reddit.com Moodle plugin OR upgrade OR migration error help',
+    'site:reddit.com Blackboard integration OR sync OR "not working" error help',
 ]
 
 
