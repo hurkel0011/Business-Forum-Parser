@@ -6,11 +6,19 @@ class GitHubScraper(BaseScraper):
     name = "GitHub Issues"
 
     DEFAULT_QUERIES = [
-        "bug help wanted label:bug",
-        "integration broken",
-        "breaking change migration",
-        "production issue urgent",
-        "workaround needed",
+        # High-value: labeled for outside help
+        "label:\"help wanted\" integration",
+        "label:\"help wanted\" migration",
+        "label:\"help wanted\" automation",
+        # Integration pain
+        "integration broken API error",
+        "webhook failing sync broken",
+        "connector broken data loss",
+        # Migration / breaking changes
+        "breaking change migration blocked",
+        "upgrade broke production regression",
+        # Real pain with engagement
+        "production issue critical urgent workaround",
     ]
 
     def scrape(self, config, query=None, limit=50):

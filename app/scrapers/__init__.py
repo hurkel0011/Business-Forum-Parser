@@ -38,6 +38,7 @@ from .legal_tech import LegalTechScraper
 from .real_estate_tech import RealEstateTechScraper
 from .gamedev import GameDevScraper
 from .nocode_platforms import NoCodePlatformsScraper
+from .reddit_targeted import RedditTargetedScraper
 from .enricher import enrich_post
 
 ALL_SCRAPERS = [
@@ -99,4 +100,6 @@ ALL_SCRAPERS = [
     MoreFreelanceScraper,
     # Social media search
     SocialMediaScraper,
+    # Reddit targeted (subreddit-specific)
+    RedditTargetedScraper,
 ]

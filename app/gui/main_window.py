@@ -18,7 +18,7 @@ class MainWindow(ctk.CTk):
         self.db = database
         self.config = config
 
-        self.title("Business Forum Parser v1.5.2")
+        self.title("Business Forum Parser v1.5.4")
         self.geometry("1200x750")
         self.minsize(900, 600)
 

@@ -38,13 +38,23 @@ SCORING RULES — be generous, we want to catch opportunities:
 - 2-3: Vague issue, already solved, or purely informational
 - 1: Not a problem at all (documentation, announcement, marketing)
 
+IMPORTANT: Score 5+ if ANY of these are true:
+- A business user describes a specific broken workflow or integration
+- Someone is comparing/switching tools due to pain (they'll pay for migration help)
+- A recurring or widespread issue that affects multiple users (community thread with agreements)
+- Someone describes manual/tedious processes that could be automated
+- Error messages or bugs in production that are unsolved
+
 HIGH-VALUE SIGNALS (score 6+):
 - "willing to pay", "need developer", "hire someone", "budget"
-- Broken integrations between specific products (e.g. "Salesforce + HubSpot sync")
-- Data migration pain, export/import failures
+- Broken integrations between TWO specific products (e.g. "Salesforce + HubSpot sync")
+- Data migration pain, export/import failures between systems
 - Automation that stopped working or doesn't exist yet
 - Business-critical workflows that are manual or broken
 - Specific error codes or stack traces with unsolved problems
+- Multiple users reporting the same issue (widespread = recurring revenue)
+- "Anyone else having this problem?" + technical details = real lead
+- IT admins or business owners describing tool pain (they have budgets)
 
 LOW-VALUE SIGNALS (score 1-3):
 - Already solved/resolved posts ("fixed it", "nvm", "working now")
@@ -52,6 +62,8 @@ LOW-VALUE SIGNALS (score 1-3):
 - Marketing pages, product announcements, changelogs
 - General "how to" tutorials without a specific problem
 - Discussions about preferences/opinions without actionable pain
+- Status pages or outage reports for cloud services (not fixable by a dev)
+- Feature requests to the vendor (user wants vendor to fix, not a freelancer)
 
 DIFFICULTY GUIDE:
 - quick_fix: Under 4 hours — config change, small script, CSS fix, simple bug

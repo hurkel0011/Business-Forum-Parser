@@ -41,8 +41,18 @@ JUNK_DOMAINS = {
     "howtogeek.com", "makeuseof.com", "lifehacker.com",
     "pcmag.com", "techradar.com", "tomsguide.com",
     "cloudwards.net", "comparitech.com",
-    # Chinese sites (non-English results)
-    "zhihu.com", "baidu.com",
+    # Chinese / non-English sites
+    "zhihu.com", "baidu.com", "csdn.net",
+    # Status / monitoring (outage reports, not fixable problems)
+    "downdetector.com", "isitdownrightnow.com", "outage.report",
+    "status.io", "statuspage.io",
+    # Job boards (not complaints)
+    "indeed.com", "glassdoor.com", "ziprecruiter.com",
+    # Course / training / how-to sites
+    "udemy.com", "coursera.org", "pluralsight.com",
+    "wikihow.com", "geeksforgeeks.org",
+    # App stores (not forums)
+    "play.google.com", "apps.apple.com",
 }
 
 JUNK_TITLE_PATTERNS = re.compile(
@@ -50,7 +60,10 @@ JUNK_TITLE_PATTERNS = re.compile(
     r"contact us|home ?page|wikipedia|definition|meaning|"
     r"what is .{0,20}\?$|"
     r"get help with|welcome to|getting started|"
-    r"troubleshooting \|)",  # category/index pages like "Troubleshooting | Zapier"
+    r"troubleshooting \|"
+    r"|is .{0,30} down\?"  # status check pages like "Is Xero down?"
+    r"|current outages"
+    r"|server status)",  # category/index pages like "Troubleshooting | Zapier"
     re.IGNORECASE,
 )
 
@@ -83,6 +96,22 @@ def _is_junk(url, title):
     if any(s in title_lower for s in marketing_signals):
         return True
 
+    # Skip product launches / self-promotion (not complaints)
+    promo_signals = ["show hn:", "launch hn:", "just launched", "introducing ",
+                     "we built", "i built", "now available"]
+    if any(s in title_lower for s in promo_signals):
+        return True
+
+    # Skip SEO troubleshooting articles (not real complaints)
+    if re.search(r"fix .{3,30} in \d+ ?(steps?|ways?|minutes?)", title_lower):
+        return True
+    if re.search(r"how to fix .{3,30} \[?(solved|fixed|guide|2024|2025|2026)", title_lower):
+        return True
+
+    # Skip already-solved community posts
+    if title_lower.startswith("solved:") or title_lower.startswith("[solved]"):
+        return True
+
     # Skip forum category/index pages (not actual posts)
     category_signals = [
         "help and faq", "help center", "knowledge base",
@@ -103,6 +132,12 @@ def _is_junk(url, title):
         "learn.microsoft.com",
         "docs.aws.amazon.com",
         "docs.digitalocean.com",
+        "support.google.com/",
+        "support.microsoft.com/",
+        "support.apple.com/",
+        "/documentation/",
+        "/api-reference/",
+        "/developer-guide/",
     ]
     if any(p in url_lower for p in doc_url_patterns):
         return True

@@ -43,6 +43,12 @@ PAIN_SIGNALS = {
     "better alternative": 5, "competitor": 4,
     "considering switching": 6, "about to cancel": 7,
     "canceling subscription": 7,
+    "hate this": 5, "worst software": 6, "regret": 5,
+
+    # Explicit help-seeking (very high value)
+    "anyone recommend": 4, "what do you use": 3,
+    "can someone build": 9, "need someone to": 7,
+    "contractor": 6, "freelance": 5,
 
     # Integration problems
     "integration": 4, "api issue": 5, "api broken": 6,
@@ -121,6 +127,11 @@ NEGATIVE_SIGNALS = {
     # Documentation / not a complaint
     "documentation": -2, "changelog": -4, "release notes": -4,
     "announcement": -3, "blog post": -2,
+    # Show / Launch / product promotion (not complaints)
+    "show hn": -6, "launch hn": -6, "tell hn": -3,
+    "i built": -4, "i made": -4, "just launched": -5,
+    "introducing": -4, "we're excited": -5, "now available": -4,
+    "open source": -2, "side project": -3,
 }
 
 
