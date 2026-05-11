@@ -15,7 +15,7 @@ QUERIES = [
 def _label(url):
     if "quora.com" in url:
         return "Quora"
-    return None
+    return "Quora"
 
 
 class QuoraScraper(BaseScraper):

@@ -20,7 +20,9 @@ QUERIES = [
 def _label(url):
     if "community.shopify.com" in url:
         return "Shopify"
-    return None
+    if "reddit.com" in url:
+        return "Shopify"
+    return "Shopify"
 
 
 class ShopifyScraper(BaseScraper):

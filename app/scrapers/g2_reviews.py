@@ -15,7 +15,7 @@ QUERIES = [
 def _label(url):
     if "g2.com" in url:
         return "G2"
-    return None
+    return "G2"
 
 
 class G2ReviewScraper(BaseScraper):

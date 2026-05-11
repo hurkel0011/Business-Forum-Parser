@@ -189,8 +189,19 @@ def prescore(post):
     if any(s in url for s in forum_signals):
         score += 2
 
-    # Normalize to 0-10
-    normalized = max(0, min(10, score / 4))
+    # Normalize to 0-10 using a curve that spreads values better
+    # Raw scores: 0-10 = low, 10-25 = medium, 25-50 = high, 50+ = very high
+    if score <= 0:
+        normalized = 0
+    elif score <= 10:
+        normalized = score * 0.3  # 0-3
+    elif score <= 25:
+        normalized = 3 + (score - 10) * 0.27  # 3-7
+    elif score <= 50:
+        normalized = 7 + (score - 25) * 0.12  # 7-10
+    else:
+        normalized = 10.0
+    normalized = max(0, min(10, normalized))
 
     post["_prescore"] = round(normalized, 1)
     post["_matched_keywords"] = matched_keywords[:15]

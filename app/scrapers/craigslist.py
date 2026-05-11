@@ -16,7 +16,9 @@ QUERIES = [
 def _label(url):
     if "craigslist.org" in url:
         return "Craigslist"
-    return None
+    if "reddit.com" in url:
+        return "Craigslist"
+    return "Craigslist"
 
 
 class CraigslistScraper(BaseScraper):

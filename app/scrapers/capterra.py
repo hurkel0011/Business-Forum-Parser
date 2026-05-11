@@ -15,7 +15,7 @@ QUERIES = [
 def _label(url):
     if "capterra.com" in url:
         return "Capterra"
-    return None
+    return "Capterra"
 
 
 class CapterraScraper(BaseScraper):

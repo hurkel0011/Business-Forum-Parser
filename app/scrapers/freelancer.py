@@ -17,7 +17,9 @@ QUERIES = [
 def _label(url):
     if "freelancer.com" in url:
         return "Freelancer.com"
-    return None
+    if "reddit.com" in url:
+        return "Freelancer"
+    return "Freelancer"
 
 
 class FreelancerScraper(BaseScraper):

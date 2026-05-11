@@ -16,7 +16,7 @@ def _label(url):
         return "GitHub Disc."
     if "github.com" in url:
         return "GitHub"
-    return None
+    return "GitHub"
 
 
 class GitHubDiscussionsScraper(BaseScraper):

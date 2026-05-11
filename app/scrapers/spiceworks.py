@@ -20,7 +20,9 @@ QUERIES = [
 def _label(url):
     if "spiceworks.com" in url:
         return "Spiceworks"
-    return None
+    if "reddit.com" in url:
+        return "IT/SysAdmin"
+    return "Spiceworks"
 
 
 class SpiceworksScraper(BaseScraper):

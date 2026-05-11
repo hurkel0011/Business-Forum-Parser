@@ -377,6 +377,27 @@ class LeadsFrame(ctk.CTkFrame):
             command=lambda: self._copy_text(opener_text),
         ).grid(row=1, column=1, padx=(0, 12), pady=(0, 4))
 
+        # Reddit Reply (only shown for Reddit leads)
+        reddit_reply = messages.get("reddit_reply", "")
+        if reddit_reply and reddit_reply.strip():
+            reddit_frame = ctk.CTkFrame(popup)
+            reddit_frame.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+            reddit_frame.grid_columnconfigure(0, weight=1)
+
+            ctk.CTkLabel(
+                reddit_frame, text="Reddit Reply",
+                font=ctk.CTkFont(size=13, weight="bold"), text_color="#ff4500",
+            ).grid(row=0, column=0, padx=12, pady=(8, 2), sticky="w")
+
+            reddit_text = ctk.CTkTextbox(reddit_frame, height=80)
+            reddit_text.grid(row=1, column=0, padx=12, pady=(0, 8), sticky="ew")
+            reddit_text.insert("1.0", reddit_reply)
+
+            ctk.CTkButton(
+                reddit_frame, text="Copy", width=60,
+                command=lambda: self._copy_text(reddit_text),
+            ).grid(row=1, column=1, padx=(0, 12), pady=(0, 8))
+
         # LinkedIn DM
         li_frame = ctk.CTkFrame(popup)
         li_frame.grid(row=3, column=0, padx=20, pady=5, sticky="ew")
@@ -454,13 +475,20 @@ class LeadsFrame(ctk.CTkFrame):
         with open(filepath, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow([
-                "Score", "Severity", "Title", "Source", "Category",
-                "Fixability", "Author", "URL", "Company", "Status", "Content",
+                "Score", "Severity", "Difficulty", "Est Hours", "Revenue",
+                "Title", "Source", "Category", "Software", "Fixability",
+                "Author", "URL", "Company", "Status", "Summary",
+                "Solution Approach", "Content",
             ])
             for lead in leads:
                 writer.writerow([
-                    lead["lead_score"], lead["severity"], lead["title"],
-                    lead["source"], lead["category"], lead["fixability_score"],
+                    lead["lead_score"], lead["severity"],
+                    lead.get("difficulty", ""), lead.get("estimated_hours", ""),
+                    lead.get("revenue_potential", ""),
+                    lead["title"], lead["source"], lead["category"],
+                    lead.get("software_product", ""), lead["fixability_score"],
                     lead["author"], lead["url"], lead["company_info"],
-                    lead["status"], (lead["content"] or "")[:500],
+                    lead["status"], lead.get("summary", ""),
+                    lead.get("solution_approach", ""),
+                    (lead["content"] or "")[:500],
                 ])

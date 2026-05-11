@@ -22,7 +22,9 @@ def _label(url):
         return "Apple Developer"
     if "apple.com" in url:
         return "Apple Support"
-    return None
+    if "reddit.com" in url:
+        return "Apple"
+    return "Apple"
 
 
 class AppleScraper(BaseScraper):

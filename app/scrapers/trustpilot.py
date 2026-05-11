@@ -15,7 +15,7 @@ QUERIES = [
 def _label(url):
     if "trustpilot.com" in url:
         return "Trustpilot"
-    return None
+    return "Trustpilot"
 
 
 class TrustpilotScraper(BaseScraper):

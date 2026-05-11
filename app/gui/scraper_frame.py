@@ -232,6 +232,34 @@ class ScraperFrame(ctk.CTkFrame):
 
             self._ui(lambda n=len(all_posts): self._log(f"\n  Total scraped: {n} posts"))
 
+            # Cross-scraper dedup by URL and fuzzy title
+            seen_urls = set()
+            seen_titles = set()
+            deduped = []
+            for p in all_posts:
+                url_key = p.get("url", "").rstrip("/").lower()
+                # Normalize title: lowercase, strip source suffixes like " - Reddit"
+                title_raw = p.get("title", "").lower().strip()
+                for suffix in [" - reddit", " : r/", " | atlassian", " - hubspot",
+                               " - stack overflow", " - github"]:
+                    if suffix in title_raw:
+                        title_raw = title_raw[:title_raw.index(suffix)]
+                title_key = title_raw[:50]
+
+                if url_key in seen_urls or (title_key and title_key in seen_titles):
+                    continue
+                seen_urls.add(url_key)
+                if title_key:
+                    seen_titles.add(title_key)
+                deduped.append(p)
+
+            dupes_removed = len(all_posts) - len(deduped)
+            if dupes_removed > 0:
+                self._ui(lambda d=dupes_removed: self._log(
+                    f"  Removed {d} cross-scraper duplicates"
+                ))
+            all_posts = deduped
+
             # ── PHASE 2: PRE-SCORE (local, no API) ───────────────
             if self.prescore_var.get():
                 self._ui(lambda: self._log("\n━━━ PHASE 2: Pre-scoring with keywords ━━━\n"))

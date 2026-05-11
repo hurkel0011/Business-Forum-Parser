@@ -15,28 +15,35 @@ Their problem: {summary}
 Suggested fix: {solution}
 Category: {category}
 Severity: {severity}
+Difficulty: {difficulty} (~{hours} hours)
+Revenue potential: {revenue}
 Company/Industry: {company}
+Software involved: {software}
+Author username: {author}
 
 Original post snippet:
 {content}
 
-Generate TWO outreach messages. Make them sound human, helpful, NOT salesy.
+Generate outreach messages. Make them sound human, helpful, NOT salesy.
 Reference their SPECIFIC problem — never be generic. Keep it casual but professional.
 
 Rules:
-- Lead with empathy about their specific issue
-- Briefly mention you can help (don't oversell)
+- Lead with empathy about their EXACT issue — name the software/tools involved
+- Show you understand the technical problem (reference specific errors or symptoms)
+- Briefly mention relevant experience ("I've solved similar X-to-Y integration issues")
 - End with a soft call to action (offer a quick call or free assessment)
-- No fake urgency, no "limited time offers"
-- Sound like a real person, not a template
-- Use their name if visible, otherwise "Hi there"
+- No fake urgency, no "limited time offers", no "I noticed your post"
+- Use their username if it looks like a real name, otherwise "Hey" or "Hi"
+- For Reddit leads, write a casual Reddit comment style reply
+- Match the tone of the platform (Reddit = casual, LinkedIn = professional, Email = warm professional)
 
 Respond with ONLY valid JSON:
 {{
+    "reddit_reply": "<If source is Reddit: casual reply offering help, 2-4 sentences, ~80 words. Otherwise empty string>",
     "linkedin_message": "<Short LinkedIn DM, 3-5 sentences max, ~100 words>",
-    "email_subject": "<Email subject line, short and specific>",
+    "email_subject": "<Email subject line, short and specific to their problem>",
     "email_body": "<Professional email, 5-8 sentences, ~150 words>",
-    "suggested_opener": "<One-line icebreaker referencing their post>"
+    "suggested_opener": "<One-line icebreaker referencing their specific technical problem>"
 }}"""
 
 
@@ -86,7 +93,12 @@ class OutreachGenerator:
             solution=lead.get("solution_approach", "Investigate and fix the issue"),
             category=lead.get("category", "unknown"),
             severity=lead.get("severity", "unknown"),
+            difficulty=lead.get("difficulty", "unknown"),
+            hours=lead.get("estimated_hours", "?"),
+            revenue=lead.get("revenue_potential", "unknown"),
             company=lead.get("company_info", "unknown"),
+            software=lead.get("software_product", "unknown"),
+            author=lead.get("author", "unknown"),
             content=(lead.get("content", "") or "")[:1500],
         )
 

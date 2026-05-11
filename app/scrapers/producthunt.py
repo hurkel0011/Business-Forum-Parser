@@ -14,7 +14,7 @@ QUERIES = [
 def _label(url):
     if "producthunt.com" in url:
         return "ProductHunt"
-    return None
+    return "ProductHunt"
 
 
 class ProductHuntScraper(BaseScraper):

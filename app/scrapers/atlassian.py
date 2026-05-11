@@ -20,7 +20,11 @@ QUERIES = [
 def _label(url):
     if "atlassian.com" in url:
         return "Atlassian"
-    return None
+    if "reddit.com" in url:
+        return "Atlassian"
+    if "stackoverflow.com" in url:
+        return "Atlassian"
+    return "Atlassian"
 
 
 class AtlassianScraper(BaseScraper):

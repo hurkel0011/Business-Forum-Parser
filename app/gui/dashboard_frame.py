@@ -43,7 +43,7 @@ class DashboardFrame(ctk.CTkFrame):
         right_frame = ctk.CTkFrame(self, fg_color="transparent")
         right_frame.grid(row=2, column=3, columnspan=2, rowspan=2, padx=(5, 20), pady=5, sticky="nsew")
         right_frame.grid_columnconfigure(0, weight=1)
-        right_frame.grid_rowconfigure((1, 3, 5), weight=1)
+        right_frame.grid_rowconfigure((1, 3, 5, 7), weight=1)
 
         # Difficulty breakdown
         ctk.CTkLabel(
@@ -61,13 +61,21 @@ class DashboardFrame(ctk.CTkFrame):
         self.software_frame = ctk.CTkScrollableFrame(right_frame, height=120)
         self.software_frame.grid(row=3, column=0, sticky="nsew", pady=(0, 8))
 
+        # Revenue breakdown
+        ctk.CTkLabel(
+            right_frame, text="By Revenue Potential", font=ctk.CTkFont(size=13, weight="bold")
+        ).grid(row=4, column=0, pady=(8, 2), sticky="w")
+
+        self.revenue_frame = ctk.CTkFrame(right_frame)
+        self.revenue_frame.grid(row=5, column=0, sticky="nsew", pady=(0, 8))
+
         # Company / industry breakdown
         ctk.CTkLabel(
             right_frame, text="Top Companies / Industries", font=ctk.CTkFont(size=13, weight="bold")
-        ).grid(row=4, column=0, pady=(8, 2), sticky="w")
+        ).grid(row=6, column=0, pady=(8, 2), sticky="w")
 
-        self.company_frame = ctk.CTkScrollableFrame(right_frame, height=120)
-        self.company_frame.grid(row=5, column=0, sticky="nsew", pady=(0, 5))
+        self.company_frame = ctk.CTkScrollableFrame(right_frame, height=100)
+        self.company_frame.grid(row=7, column=0, sticky="nsew", pady=(0, 5))
 
     def _create_stat_card(self, title, value, col):
         card = ctk.CTkFrame(self, corner_radius=10)
@@ -172,6 +180,33 @@ class DashboardFrame(ctk.CTkFrame):
         else:
             ctk.CTkLabel(
                 self.difficulty_frame, text="No data yet", text_color="gray"
+            ).grid(row=0, column=0, padx=12, pady=8)
+
+        # Revenue breakdown
+        for widget in self.revenue_frame.winfo_children():
+            widget.destroy()
+
+        by_revenue = stats.get("by_revenue", {})
+        rev_order = ["premium", "high", "medium", "low"]
+        rev_labels = {"premium": "Premium ($5K+)", "high": "High ($1K-$5K)",
+                       "medium": "Medium ($200-$1K)", "low": "Low (<$200)"}
+        rev_colors = {"premium": "#a855f7", "high": "#22c55e",
+                       "medium": "#3b82f6", "low": "gray"}
+
+        if by_revenue:
+            for i, key in enumerate(rev_order):
+                count = by_revenue.get(key, 0)
+                if count == 0:
+                    continue
+                ctk.CTkLabel(
+                    self.revenue_frame,
+                    text=f"{rev_labels.get(key, key)}: {count}",
+                    font=ctk.CTkFont(size=12, weight="bold"),
+                    text_color=rev_colors.get(key, "gray"),
+                ).grid(row=i, column=0, padx=12, pady=3, sticky="w")
+        else:
+            ctk.CTkLabel(
+                self.revenue_frame, text="No data yet", text_color="gray"
             ).grid(row=0, column=0, padx=12, pady=8)
 
         # Software breakdown

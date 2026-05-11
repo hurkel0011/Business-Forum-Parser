@@ -15,7 +15,7 @@ QUERIES = [
 def _label(url):
     if "indiehackers.com" in url:
         return "IndieHackers"
-    return None
+    return "IndieHackers"
 
 
 class IndieHackersScraper(BaseScraper):

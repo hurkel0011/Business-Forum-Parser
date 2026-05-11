@@ -22,7 +22,9 @@ QUERIES = [
 def _label(url):
     if "wordpress.org" in url:
         return "WordPress"
-    return None
+    if "reddit.com" in url:
+        return "WordPress"
+    return "WordPress"
 
 
 class WordPressScraper(BaseScraper):
