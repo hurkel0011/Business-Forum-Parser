@@ -285,8 +285,13 @@ class LeadsFrame(ctk.CTkFrame):
                 text_color=diff_colors.get(diff_short, "gray"),
             ).grid(row=0, column=2, padx=4, pady=5)
 
+            # Add a small note indicator if the lead has notes attached
+            title_text = (lead["title"] or "")[:60]
+            has_notes = bool((lead.get("notes") or "").strip())
+            if has_notes:
+                title_text = "📝 " + title_text
             ctk.CTkLabel(
-                row, text=(lead["title"] or "")[:60], anchor="w"
+                row, text=title_text, anchor="w"
             ).grid(row=0, column=3, padx=4, pady=5, sticky="ew")
 
             sw = (lead["software_product"] if "software_product" in lead.keys() else "") or ""
