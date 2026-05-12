@@ -131,6 +131,33 @@ class LeadsFrame(ctk.CTkFrame):
         )
         self.detail_label.grid(row=0, column=0, padx=15, pady=10, sticky="w")
 
+        # Status + notes editor (row 1 spans both columns)
+        editor_frame = ctk.CTkFrame(self.detail_frame, fg_color="transparent")
+        editor_frame.grid(row=1, column=0, columnspan=2, padx=15, pady=(0, 10), sticky="ew")
+        editor_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(editor_frame, text="Status:", font=ctk.CTkFont(size=11)).grid(
+            row=0, column=0, padx=(0, 6), pady=2, sticky="w"
+        )
+        self.status_editor = ctk.CTkComboBox(
+            editor_frame,
+            values=["new", "contacted", "in_progress", "won", "lost"],
+            width=130, state="disabled",
+        )
+        self.status_editor.grid(row=0, column=1, padx=(0, 8), pady=2, sticky="w")
+
+        self.save_status_btn = ctk.CTkButton(
+            editor_frame, text="Save", width=70, state="disabled",
+            command=self._save_status_and_notes,
+        )
+        self.save_status_btn.grid(row=0, column=2, padx=(0, 0), pady=2)
+
+        ctk.CTkLabel(editor_frame, text="Notes:", font=ctk.CTkFont(size=11)).grid(
+            row=1, column=0, padx=(0, 6), pady=(6, 2), sticky="nw"
+        )
+        self.notes_editor = ctk.CTkTextbox(editor_frame, height=60, state="disabled")
+        self.notes_editor.grid(row=1, column=1, columnspan=2, padx=(0, 0), pady=(6, 2), sticky="ew")
+
         btn_frame = ctk.CTkFrame(self.detail_frame, fg_color="transparent")
         btn_frame.grid(row=0, column=1, padx=(5, 15), pady=10)
 
@@ -297,6 +324,14 @@ class LeadsFrame(ctk.CTkFrame):
         self.outreach_btn.configure(state="normal")
         self.delete_btn.configure(state="normal")
 
+        # Populate status + notes editor
+        self.status_editor.configure(state="readonly")
+        self.status_editor.set(lead.get("status", "new") or "new")
+        self.save_status_btn.configure(state="normal")
+        self.notes_editor.configure(state="normal")
+        self.notes_editor.delete("1.0", "end")
+        self.notes_editor.insert("1.0", lead.get("notes", "") or "")
+
         diff = lead["difficulty"] if "difficulty" in lead.keys() else "unknown"
         hours = lead["estimated_hours"] if "estimated_hours" in lead.keys() else 0
         sw = lead["software_product"] if "software_product" in lead.keys() else ""
@@ -319,6 +354,23 @@ class LeadsFrame(ctk.CTkFrame):
         detail_text += f"\n{(lead['content'] or '')[:300]}"
 
         self.detail_label.configure(text=detail_text)
+
+    def _save_status_and_notes(self):
+        """Persist the status dropdown and notes textbox to the DB."""
+        if not self._current_lead:
+            return
+        lead_id = self._current_lead["id"]
+        status = self.status_editor.get()
+        notes = self.notes_editor.get("1.0", "end").strip()
+        self.db.update_lead_status(lead_id, status, notes=notes or None)
+        # Update local cache so subsequent refresh doesn't lose state
+        self._current_lead["status"] = status
+        self._current_lead["notes"] = notes
+        # Flash the button text to confirm save
+        self.save_status_btn.configure(text="Saved!")
+        self.after(1500, lambda: self.save_status_btn.configure(text="Save"))
+        # Refresh leads list so the status badge updates
+        self.refresh()
 
     def _confirm_delete(self, title):
         """Show a modal yes/no popup, return True if user confirms."""
@@ -381,8 +433,14 @@ class LeadsFrame(ctk.CTkFrame):
         self._current_url = None
         self.detail_label.configure(text="Lead deleted")
         self.open_url_btn.configure(state="disabled")
+        self.copy_url_btn.configure(state="disabled")
         self.outreach_btn.configure(state="disabled")
         self.delete_btn.configure(state="disabled")
+        # Clear notes/status editor
+        self.status_editor.configure(state="disabled")
+        self.save_status_btn.configure(state="disabled")
+        self.notes_editor.delete("1.0", "end")
+        self.notes_editor.configure(state="disabled")
         self.refresh()
 
     def _generate_outreach(self):
