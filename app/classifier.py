@@ -354,7 +354,9 @@ class LeadClassifier:
             try:
                 response = self.client.messages.create(
                     model=self.model,
-                    max_tokens=400,
+                    # 600 tokens gives headroom over the typical ~250-token
+                    # JSON output, preventing truncation on verbose summaries
+                    max_tokens=600,
                     system=[{
                         "type": "text",
                         "text": SYSTEM_PROMPT,
