@@ -262,7 +262,8 @@ def ddg_search(query, count=10):
 # Multi-query search aggregator (used by all domain-specific scrapers)
 # ---------------------------------------------------------------------------
 
-def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None, delay=0.8):
+def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None,
+                        delay=0.8, max_queries=8):
     """Run multiple search queries via DuckDuckGo, filter junk, deduplicate.
 
     Args:
@@ -271,14 +272,24 @@ def multi_domain_search(queries, source_name="Web", limit=50, url_filter=None, d
         limit: Max total results
         url_filter: Optional function(url) -> source_name or None
         delay: Seconds between queries to avoid rate limiting
+        max_queries: Cap on number of queries to run per scrape call (reduces
+            DDG rate limit pressure for scrapers with long QUERIES lists)
 
     Returns:
         Deduplicated list of post dicts with real URLs
     """
+    # Cap query count to reduce DDG load
+    if len(queries) > max_queries:
+        queries = queries[:max_queries]
+
     all_posts = []
     per_query = max(5, limit // max(len(queries), 1))
 
     for q in queries:
+        # Early exit if we already have enough unique posts
+        if len(all_posts) >= limit * 2:
+            break
+
         raw = ddg_search(q, count=per_query)
 
         for item in raw:
