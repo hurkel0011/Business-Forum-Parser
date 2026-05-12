@@ -205,11 +205,15 @@ def prescore(post):
         r"^why .+ (is|are) (dead|dying|overrated|wrong)",
         r"^\d+ (ways|tips|steps|things|reasons) ",
         r"^(a|the) .+ guide to ",
+        r"beginner.s guide",
+        r"complete guide",
+        r"ultimate guide",
         r"common .+ errors? .+ (fix|solv|resolv)",
         r"^what .+ taught me",
         r"^i (wrote|built|made|created) (a|an|my|the) ",
         r"^gaming on ",
         r"explained",
+        r"usage documentation",
     ]
     for pat in editorial_patterns:
         if re.search(pat, title):

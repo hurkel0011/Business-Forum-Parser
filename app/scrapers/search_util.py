@@ -61,6 +61,15 @@ JUNK_DOMAINS = {
     "business.com/hr", "business.com/crm",  # generic how-to articles
     # App stores (not forums)
     "play.google.com", "apps.apple.com",
+    # Tutorial / educational sites
+    "superhi.com", "w3schools.com", "freecodecamp.org",
+    "codecademy.com", "tutorialspoint.com",
+    # Product / tool listing pages (not complaints)
+    "dbconvert.com", "softwareadvice.com",
+    "alternativeto.com", "slant.co",
+    # WordPress plugin docs / guides
+    "developer.wordpress.org", "developer.woocommerce.com",
+    "developer.wordpress.com",
 }
 
 JUNK_TITLE_PATTERNS = re.compile(
