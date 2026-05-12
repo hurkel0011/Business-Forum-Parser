@@ -55,12 +55,6 @@ class GitHubScraper(BaseScraper):
 
                 for item in data.get("items", []):
                     body = (item.get("body") or "")[:2000]
-                    reactions = item.get("reactions", {})
-                    reaction_count = sum(
-                        reactions.get(k, 0)
-                        for k in ["+1", "-1", "confused", "heart"]
-                    )
-
                     repo_url = item.get("repository_url", "")
                     repo_name = "/".join(repo_url.split("/")[-2:]) if repo_url else ""
 

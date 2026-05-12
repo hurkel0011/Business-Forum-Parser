@@ -35,6 +35,7 @@ class DevToScraper(BaseScraper):
 
     def scrape(self, config, query=None, limit=50):
         posts = []
+        seen_urls = set()  # O(1) dedup instead of O(n²) list scan
 
         if query:
             searches = [query]
@@ -56,6 +57,9 @@ class DevToScraper(BaseScraper):
                     continue
 
                 for article in resp.json():
+                    url = article.get("url", "")
+                    if url in seen_urls:
+                        continue
                     title = article.get("title", "")
                     desc = article.get("description", "")
                     combined = f"{title} {desc}".lower()
@@ -74,11 +78,12 @@ class DevToScraper(BaseScraper):
                         if not any(w in combined for w in pain_words):
                             continue
 
+                    seen_urls.add(url)
                     posts.append({
                         "source": "Dev.to",
                         "title": title,
                         "content": desc[:2000],
-                        "url": article.get("url", ""),
+                        "url": url,
                         "author": article.get("user", {}).get("username", "unknown"),
                     })
 
@@ -100,17 +105,15 @@ class DevToScraper(BaseScraper):
                     continue
 
                 for article in resp.json():
-                    title = article.get("title", "")
-                    desc = article.get("description", "")
                     url = article.get("url", "")
-
-                    if url in [p["url"] for p in posts]:
+                    if url in seen_urls:
                         continue
 
+                    seen_urls.add(url)
                     posts.append({
                         "source": "Dev.to",
-                        "title": title,
-                        "content": desc[:2000],
+                        "title": article.get("title", ""),
+                        "content": (article.get("description") or "")[:2000],
                         "url": url,
                         "author": article.get("user", {}).get("username", "unknown"),
                     })
