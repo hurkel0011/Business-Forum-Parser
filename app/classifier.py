@@ -7,29 +7,25 @@ _CLASSIFIER_ORIGIN = "BonnieTheDog420"
 __author__ = "Howell Brady"
 
 
-CLASSIFY_PROMPT = """You are a business lead spotter. Analyze this forum/community post and decide if it represents a real business opportunity for a freelance developer.
+# System prompt — static scoring rules (cached across API calls for cost savings)
+SYSTEM_PROMPT = """You are a business lead spotter. Analyze forum/community posts and decide if they represent real business opportunities for a freelance developer.
 
 A "lead" = someone experiencing a REAL technical problem that could be solved by building a tool, script, integration, automation, or custom development.
 
-Post Source: {source}
-Post Title: {title}
-Post Content:
-{content}
-
 Respond with ONLY valid JSON (no markdown, no explanation):
-{{
+{
     "severity": "critical|high|medium|low",
     "fixability_score": <1-10>,
     "category": "bug|integration|automation|data|security|performance|ux|migration|workflow|other",
     "lead_score": <1-10>,
-    "company_info": "<company name or industry, e.g. 'Acme Corp' or 'eCommerce/retail'>",
-    "software_product": "<specific software mentioned, e.g. 'Salesforce', 'WordPress', 'Jira', or ''>",
+    "company_info": "<company name or industry>",
+    "software_product": "<specific software mentioned>",
     "difficulty": "quick_fix|moderate|complex|major_project",
-    "estimated_hours": <best guess hours to fix: 1-200>,
+    "estimated_hours": <1-200>,
     "revenue_potential": "low|medium|high|premium",
     "summary": "<the core problem in one sentence>",
     "solution_approach": "<how a developer would fix it in one sentence>"
-}}
+}
 
 SCORING RULES — be generous, we want to catch opportunities:
 - 8-10: URGENT pain — blocked, losing money, willing to pay, needs developer
@@ -41,7 +37,7 @@ SCORING RULES — be generous, we want to catch opportunities:
 IMPORTANT: Score 5+ if ANY of these are true:
 - A business user describes a specific broken workflow or integration
 - Someone is comparing/switching tools due to pain (they'll pay for migration help)
-- A recurring or widespread issue that affects multiple users (community thread with agreements)
+- A recurring or widespread issue that affects multiple users
 - Someone describes manual/tedious processes that could be automated
 - Error messages or bugs in production that are unsolved
 
@@ -53,7 +49,6 @@ HIGH-VALUE SIGNALS (score 6+):
 - Business-critical workflows that are manual or broken
 - Specific error codes or stack traces with unsolved problems
 - Multiple users reporting the same issue (widespread = recurring revenue)
-- "Anyone else having this problem?" + technical details = real lead
 - IT admins or business owners describing tool pain (they have budgets)
 
 LOW-VALUE SIGNALS (score 1-3):
@@ -61,29 +56,27 @@ LOW-VALUE SIGNALS (score 1-3):
 - Official documentation or knowledge base articles
 - Marketing pages, product announcements, changelogs
 - General "how to" tutorials without a specific problem
-- Discussions about preferences/opinions without actionable pain
 - Status pages or outage reports for cloud services (not fixable by a dev)
 - Feature requests to the vendor (user wants vendor to fix, not a freelancer)
 
 IMPORTANT EDGE CASES — don't miss these:
-- If content is short but the TITLE describes a specific broken integration/tool, score 4+ (the title alone signals real pain)
-- QuickBooks/Xero/Shopify users complaining = small business owners with budgets, score 5+
-- "HORRIBLE", "NIGHTMARE", "worst update" from business users = score 5+ (they'll pay to fix it)
-- CI/CD pipeline failures (Bitbucket, GitHub Actions, Jenkins) = dev teams who pay for DevOps help, score 5+
-- Broken webhooks, API rate limits, sync failures = integration work, always score 5+
-- Posts from r/sysadmin, r/msp = IT professionals with company budgets, add +1 to score
+- Short content but TITLE describes broken integration/tool = score 4+
+- QuickBooks/Xero/Shopify users = small business owners with budgets, score 5+
+- "HORRIBLE", "NIGHTMARE", "worst update" from business users = score 5+
+- CI/CD pipeline failures = dev teams who pay for DevOps help, score 5+
+- Broken webhooks, API rate limits, sync failures = always score 5+
+- Posts from r/sysadmin, r/msp = IT pros with company budgets, add +1
 
-DIFFICULTY GUIDE:
-- quick_fix: Under 4 hours — config change, small script, CSS fix, simple bug
-- moderate: 4-20 hours — custom integration, plugin, data migration
-- complex: 20-80 hours — full feature build, multi-system automation
-- major_project: 80+ hours — full app/platform, major overhaul
+DIFFICULTY: quick_fix (<4h), moderate (4-20h), complex (20-80h), major_project (80+h)
+REVENUE: low (<$200), medium ($200-$1K), high ($1K-$5K), premium ($5K+)"""
 
-REVENUE POTENTIAL:
-- low: Under $200 — quick fixes, small scripts
-- medium: $200-$1000 — moderate dev work, integrations
-- high: $1000-$5000 — complex projects, ongoing maintenance
-- premium: $5000+ — enterprise solutions, major builds"""
+# User message template — dynamic per post
+USER_PROMPT = """Analyze this post:
+
+Source: {source}
+Title: {title}
+Content:
+{content}"""
 
 
 MODELS = [
@@ -189,7 +182,7 @@ class LeadClassifier:
         if len(content) > 2500:
             content = self._smart_truncate(content, 2500)
 
-        prompt = CLASSIFY_PROMPT.format(
+        user_msg = USER_PROMPT.format(
             source=post.get("source", "Unknown"),
             title=title,
             content=content,
@@ -200,7 +193,12 @@ class LeadClassifier:
                 response = self.client.messages.create(
                     model=self.model,
                     max_tokens=400,
-                    messages=[{"role": "user", "content": prompt}],
+                    system=[{
+                        "type": "text",
+                        "text": SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }],
+                    messages=[{"role": "user", "content": user_msg}],
                 )
 
                 text = response.content[0].text.strip()
