@@ -304,9 +304,10 @@ class ScraperFrame(ctk.CTkFrame):
                 candidates = to_enrich + candidates[50:]
 
                 # Re-score enriched posts — full content has better pain signals
+                # prescore() stores into post["_prescore"] internally
                 for post in candidates:
-                    post["pre_score"] = prescore(post)
-                candidates.sort(key=lambda p: p.get("pre_score", 0), reverse=True)
+                    prescore(post)
+                candidates.sort(key=lambda p: p.get("_prescore", 0), reverse=True)
 
             # ── PRE-CLASSIFY: Remove duplicates already in DB ─────
             before_dedup = len(candidates)

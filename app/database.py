@@ -42,6 +42,11 @@ class Database:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE INDEX IF NOT EXISTS idx_leads_url ON leads(url);
+            CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(lead_score DESC);
+            CREATE INDEX IF NOT EXISTS idx_leads_source ON leads(source);
+            CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+
             CREATE TABLE IF NOT EXISTS scrape_runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 source TEXT NOT NULL,
@@ -86,9 +91,9 @@ class Database:
         if not url:
             return False
         row = self.conn.execute(
-            "SELECT COUNT(*) FROM leads WHERE url = ?", (url,)
+            "SELECT 1 FROM leads WHERE url = ? LIMIT 1", (url,)
         ).fetchone()
-        return row[0] > 0
+        return row is not None
 
     def add_lead(self, lead_data):
         # Skip duplicates by URL
