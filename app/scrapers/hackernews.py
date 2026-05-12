@@ -67,15 +67,23 @@ class HackerNewsScraper(BaseScraper):
                         if not title and not story_text:
                             continue
 
-                        # Skip product launches / promos (not complaints)
+                        # Skip product launches, promos, opinion pieces (not complaints)
                         title_lower = title.lower()
-                        if any(title_lower.startswith(p) for p in [
+                        skip_prefixes = [
                             "show hn:", "launch hn:", "tell hn:",
                             "ask hn: what are you working",
                             "ask hn: who is hiring",
                             "ask hn: who wants to be hired",
                             "ask hn: freelancer?",
-                        ]):
+                        ]
+                        skip_patterns = [
+                            " is dead", " sucks", " is overrated",
+                            " myths ", "why i stopped", "why i left",
+                            "we're hiring", "job listing",
+                        ]
+                        if any(title_lower.startswith(p) for p in skip_prefixes):
+                            continue
+                        if any(p in title_lower for p in skip_patterns):
                             continue
 
                         all_posts.append({

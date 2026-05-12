@@ -373,7 +373,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # ── DONE ─────────────────────────────────────────────
             self.db.log_scrape_run(
-                "v1.5.4", query or "wide search", len(all_posts), leads_added
+                "v1.5.5", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)

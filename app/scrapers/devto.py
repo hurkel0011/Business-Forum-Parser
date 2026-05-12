@@ -41,14 +41,14 @@ class DevToScraper(BaseScraper):
         else:
             searches = SEARCH_QUERIES
 
-        # Search by query terms
+        # Search by query terms — use Dev.to search API
         for term in searches:
             if len(posts) >= limit:
                 break
             try:
                 resp = requests.get(
-                    API_BASE,
-                    params={"per_page": 10, "tag": "discuss,help", "state": "fresh"},
+                    "https://dev.to/api/articles",
+                    params={"per_page": 10, "tag": "discuss,help", "search": term},
                     headers=HEADERS,
                     timeout=15,
                 )
