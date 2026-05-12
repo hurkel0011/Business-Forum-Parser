@@ -9,10 +9,19 @@ class DashboardFrame(ctk.CTkFrame):
 
         self.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
+        header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        header_frame.grid(row=0, column=0, columnspan=5, padx=20, pady=(10, 15), sticky="ew")
+        header_frame.grid_columnconfigure(0, weight=1)
+
         header = ctk.CTkLabel(
-            self, text="Dashboard", font=ctk.CTkFont(size=24, weight="bold")
+            header_frame, text="Dashboard",
+            font=ctk.CTkFont(size=24, weight="bold"),
         )
-        header.grid(row=0, column=0, columnspan=5, padx=20, pady=(10, 15), sticky="w")
+        header.grid(row=0, column=0, sticky="w")
+
+        ctk.CTkButton(
+            header_frame, text="Refresh", width=80, command=self.refresh,
+        ).grid(row=0, column=1, sticky="e")
 
         # Stat cards — row 1
         self.stat_cards = {}
