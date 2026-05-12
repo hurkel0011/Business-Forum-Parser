@@ -85,9 +85,16 @@ class ScraperFrame(ctk.CTkFrame):
             [("reddit_targeted", "Reddit (Targeted)")],
         ]
 
+        # Load saved toggle state from config (default to True if not set)
+        saved_sources = self.config.get("scrape_sources", {}) or {}
+
         for row_idx, row_sources in enumerate(sources_rows):
             for col_idx, (key, label) in enumerate(row_sources):
-                var = ctk.BooleanVar(value=True)
+                # Use saved value if available, else default to True
+                default_on = saved_sources.get(key, True)
+                var = ctk.BooleanVar(value=default_on)
+                # Persist on toggle so it survives restart
+                var.trace_add("write", lambda *_, k=key, v=var: self._save_source_toggle(k, v))
                 cb = ctk.CTkCheckBox(sources_frame, text=label, variable=var)
                 cb.grid(row=row_idx + 1, column=col_idx, padx=10, pady=2)
                 self.source_vars[key] = var
@@ -146,6 +153,17 @@ class ScraperFrame(ctk.CTkFrame):
 
     def _ui(self, func):
         self.after(0, func)
+
+    def _save_source_toggle(self, key, var):
+        """Persist a single toggle state to config so it survives restart."""
+        try:
+            current = self.config.get("scrape_sources", {}) or {}
+            # Make a copy so we don't mutate the live dict before saving
+            updated = dict(current)
+            updated[key] = bool(var.get())
+            self.config.set("scrape_sources", updated)
+        except Exception:
+            pass  # Don't crash UI on config save failure
 
     def _start_scrape(self):
         if self._is_scraping:
