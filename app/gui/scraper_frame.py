@@ -446,7 +446,12 @@ class ScraperFrame(ctk.CTkFrame):
             ))
 
         except Exception as e:
-            self._ui(lambda e=e: self._log(f"\nFATAL: {e}"))
+            # Include the traceback so a user can paste it back for diagnosis
+            import traceback
+            tb = traceback.format_exc()
+            self._ui(lambda e=e, t=tb: self._log(
+                f"\nFATAL: {type(e).__name__}: {e}\n\n{t}"
+            ))
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
