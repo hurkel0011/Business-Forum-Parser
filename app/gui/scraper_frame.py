@@ -65,8 +65,11 @@ class ScraperFrame(ctk.CTkFrame):
         sources_frame = ctk.CTkFrame(self)
         sources_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
 
+        from ..scrapers import ALL_SCRAPERS
+        source_count = len(ALL_SCRAPERS)
+
         ctk.CTkLabel(
-            sources_frame, text="41 Sources — the widest net on the internet",
+            sources_frame, text=f"{source_count} Sources — the widest net on the internet",
             font=ctk.CTkFont(size=14, weight="bold"),
         ).grid(row=0, column=0, columnspan=4, padx=15, pady=(10, 5), sticky="w")
 
@@ -125,9 +128,10 @@ class ScraperFrame(ctk.CTkFrame):
         ).grid(row=1, column=2, columnspan=2, padx=15, pady=(0, 8), sticky="w")
 
         # Scrape button
+        self._start_btn_text = f"Start Scraping — {source_count} Sources"
         self.scrape_btn = ctk.CTkButton(
             self,
-            text="Start Scraping — 41 Sources",
+            text=self._start_btn_text,
             height=45,
             font=ctk.CTkFont(size=15, weight="bold"),
             command=self._start_scrape,
@@ -456,7 +460,7 @@ class ScraperFrame(ctk.CTkFrame):
         finally:
             self._is_scraping = False
             self._ui(lambda: self.scrape_btn.configure(
-                state="normal", text="Start Scraping — 41 Sources"
+                state="normal", text=self._start_btn_text
             ))
 
     def refresh(self):
