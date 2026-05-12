@@ -140,12 +140,26 @@ class LeadsFrame(ctk.CTkFrame):
         )
         self.open_url_btn.grid(row=0, column=0, padx=2, pady=2)
 
+        self.copy_url_btn = ctk.CTkButton(
+            btn_frame, text="Copy URL", width=80, state="disabled",
+            fg_color="gray30", hover_color="gray40",
+            command=self._copy_url,
+        )
+        self.copy_url_btn.grid(row=0, column=1, padx=2, pady=2)
+
         self.outreach_btn = ctk.CTkButton(
             btn_frame, text="Generate Outreach", width=140, state="disabled",
             fg_color="#6366f1", hover_color="#4f46e5",
             command=self._generate_outreach,
         )
         self.outreach_btn.grid(row=1, column=0, padx=2, pady=2)
+
+        self.delete_btn = ctk.CTkButton(
+            btn_frame, text="Delete Lead", width=100, state="disabled",
+            fg_color="#dc2626", hover_color="#b91c1c",
+            command=self._delete_lead,
+        )
+        self.delete_btn.grid(row=2, column=0, padx=2, pady=2)
 
         self._current_url = None
         self._current_lead = None
@@ -278,7 +292,9 @@ class LeadsFrame(ctk.CTkFrame):
         self._current_url = lead["url"]
         self._current_lead = lead
         self.open_url_btn.configure(state="normal" if self._current_url else "disabled")
+        self.copy_url_btn.configure(state="normal" if self._current_url else "disabled")
         self.outreach_btn.configure(state="normal")
+        self.delete_btn.configure(state="normal")
 
         diff = lead["difficulty"] if "difficulty" in lead.keys() else "unknown"
         hours = lead["estimated_hours"] if "estimated_hours" in lead.keys() else 0
@@ -307,8 +323,26 @@ class LeadsFrame(ctk.CTkFrame):
         if self._current_url:
             webbrowser.open(self._current_url)
 
+    def _copy_url(self):
+        if self._current_url:
+            self.clipboard_clear()
+            self.clipboard_append(self._current_url)
+
     def _update_status(self, lead_id, status):
         self.db.update_lead_status(lead_id, status)
+
+    def _delete_lead(self):
+        if not self._current_lead:
+            return
+        lead_id = self._current_lead["id"]
+        self.db.delete_lead(lead_id)
+        self._current_lead = None
+        self._current_url = None
+        self.detail_label.configure(text="Lead deleted")
+        self.open_url_btn.configure(state="disabled")
+        self.outreach_btn.configure(state="disabled")
+        self.delete_btn.configure(state="disabled")
+        self.refresh()
 
     def _generate_outreach(self):
         if not self._current_lead:
