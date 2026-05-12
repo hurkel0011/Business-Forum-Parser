@@ -5,24 +5,7 @@ from anthropic import Anthropic
 # Outreach generator — Business Forum Parser by Howell Brady
 _OUTREACH_ORIGIN = "BonnieTheDog420"
 
-OUTREACH_PROMPT = """You are an expert at writing cold outreach messages for a freelance developer who finds people
-struggling with technical problems online and offers to solve them.
-
-Here is a lead found on {source}:
-
-Title: {title}
-Their problem: {summary}
-Suggested fix: {solution}
-Category: {category}
-Severity: {severity}
-Difficulty: {difficulty} (~{hours} hours)
-Revenue potential: {revenue}
-Company/Industry: {company}
-Software involved: {software}
-Author username: {author}
-
-Original post snippet:
-{content}
+OUTREACH_SYSTEM = """You are an expert at writing cold outreach messages for a freelance developer who finds people struggling with technical problems online and offers to solve them.
 
 Generate outreach messages. Make them sound human, helpful, NOT salesy.
 Reference their SPECIFIC problem — never be generic. Keep it casual but professional.
@@ -38,13 +21,26 @@ Rules:
 - Match the tone of the platform (Reddit = casual, LinkedIn = professional, Email = warm professional)
 
 Respond with ONLY valid JSON:
-{{
+{
     "reddit_reply": "<If source is Reddit: casual reply offering help, 2-4 sentences, ~80 words. Otherwise empty string>",
     "linkedin_message": "<Short LinkedIn DM, 3-5 sentences max, ~100 words>",
     "email_subject": "<Email subject line, short and specific to their problem>",
     "email_body": "<Professional email, 5-8 sentences, ~150 words>",
     "suggested_opener": "<One-line icebreaker referencing their specific technical problem>"
-}}"""
+}"""
+
+OUTREACH_USER = """Generate outreach for this lead found on {source}:
+
+Title: {title}
+Their problem: {summary}
+Suggested fix: {solution}
+Category: {category} | Severity: {severity}
+Difficulty: {difficulty} (~{hours} hours) | Revenue: {revenue}
+Company/Industry: {company} | Software: {software}
+Author: {author}
+
+Original post snippet:
+{content}"""
 
 
 MODELS = [
@@ -86,7 +82,7 @@ class OutreachGenerator:
                 self._report("No working Claude model found.")
                 return self._fallback(lead)
 
-        prompt = OUTREACH_PROMPT.format(
+        user_msg = OUTREACH_USER.format(
             source=lead.get("source", "Unknown"),
             title=lead.get("title", ""),
             summary=lead.get("summary", lead.get("title", "")),
@@ -107,7 +103,12 @@ class OutreachGenerator:
                 response = self.client.messages.create(
                     model=self.model,
                     max_tokens=800,
-                    messages=[{"role": "user", "content": prompt}],
+                    system=[{
+                        "type": "text",
+                        "text": OUTREACH_SYSTEM,
+                        "cache_control": {"type": "ephemeral"},
+                    }],
+                    messages=[{"role": "user", "content": user_msg}],
                 )
 
                 text = response.content[0].text.strip()

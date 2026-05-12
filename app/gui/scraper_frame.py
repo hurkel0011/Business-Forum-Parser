@@ -43,7 +43,7 @@ from ..scrapers.gamedev import GameDevScraper
 from ..scrapers.nocode_platforms import NoCodePlatformsScraper
 from ..scrapers.reddit_targeted import RedditTargetedScraper
 from ..scrapers.enricher import enrich_post, batch_enrich
-from ..prescorer import batch_prescore
+from ..prescorer import batch_prescore, prescore
 from ..classifier import LeadClassifier
 
 
@@ -302,6 +302,11 @@ class ScraperFrame(ctk.CTkFrame):
 
                 self._ui(lambda e=enriched_count: self._log(f"  Enriched {e} posts with full content"))
                 candidates = to_enrich + candidates[50:]
+
+                # Re-score enriched posts — full content has better pain signals
+                for post in candidates:
+                    post["pre_score"] = prescore(post)
+                candidates.sort(key=lambda p: p.get("pre_score", 0), reverse=True)
 
             # ── PRE-CLASSIFY: Remove duplicates already in DB ─────
             before_dedup = len(candidates)
