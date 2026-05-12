@@ -144,6 +144,7 @@ NEGATIVE_SIGNALS = {
     "career advice": -4, "resume": -3, "interview": -3,
     "salary": -3, "job market": -4, "laid off": -3,
     "i wrote a": -3, "i created a": -3,
+    "an introduction to": -4, "comprehensive overview": -3,
     # News / journalism
     "according to": -2, "report says": -3, "study finds": -3,
     "researchers": -3, "experts say": -3,
@@ -208,6 +209,10 @@ def prescore(post):
         r"beginner.s guide",
         r"complete guide",
         r"ultimate guide",
+        r"comprehensive guide",
+        r"^an introduction to ",
+        r"check these \d+ things",
+        r"^troubleshooting .+: a ",
         r"common .+ errors? .+ (fix|solv|resolv)",
         r"^what .+ taught me",
         r"^i (wrote|built|made|created) (a|an|my|the) ",
