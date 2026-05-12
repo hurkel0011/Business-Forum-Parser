@@ -286,18 +286,36 @@ class ScraperFrame(ctk.CTkFrame):
                 self._ui(lambda: self._log("\nNo posts passed pre-filter. Try broader keywords."))
                 return
 
-            # ── PHASE 3: ENRICH (fetch full pages) ───────────────
+            # ── PHASE 3: ENRICH (fetch full pages, in parallel) ──
             if self.enrich_var.get():
                 self._ui(lambda: self._log("\n━━━ PHASE 3: Fetching full page content ━━━\n"))
                 enriched_count = 0
                 # Only enrich top 50 to save time
                 to_enrich = candidates[:50]
+                # Capture original content lengths for the enrichment counter
+                old_lens = [len(p.get("content", "")) for p in to_enrich]
+
+                # Parallel fetch — each request is independent network I/O,
+                # so we can run them concurrently to slash enrichment time
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+                    futures = {pool.submit(enrich_post, p): i for i, p in enumerate(to_enrich)}
+                    done = 0
+                    for fut in concurrent.futures.as_completed(futures):
+                        i = futures[fut]
+                        try:
+                            to_enrich[i] = fut.result(timeout=30)
+                        except Exception:
+                            pass  # leave original post on enrichment failure
+                        done += 1
+                        if done % 5 == 0 or done == len(to_enrich):
+                            self._ui(lambda d=done, t=len(to_enrich):
+                                self.progress_bar.set(0.35 + (d / t) * 0.15))
+
+                # Count how many posts actually gained content
                 for i, post in enumerate(to_enrich):
-                    self._ui(lambda: self.progress_bar.set(0.35 + (i / len(to_enrich)) * 0.15))
-                    old_len = len(post.get("content", ""))
-                    to_enrich[i] = enrich_post(post)
-                    new_len = len(to_enrich[i].get("content", ""))
-                    if new_len > old_len + 100:
+                    new_len = len(post.get("content", ""))
+                    if new_len > old_lens[i] + 100:
                         enriched_count += 1
 
                 self._ui(lambda e=enriched_count: self._log(f"  Enriched {e} posts with full content"))
