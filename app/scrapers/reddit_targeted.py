@@ -112,4 +112,11 @@ class RedditTargetedScraper(BaseScraper):
                 for sub, terms in SUBREDDIT_QUERIES
             ]
 
-        return multi_domain_search(queries, "Reddit", limit, url_filter=_label)
+        # This scraper hits 14+ high-value subreddits, each with proven
+        # business pain signals. Override the default 8-query cap so we
+        # don't miss QuickBooks/Shopify/Jira/Notion (the most lucrative).
+        # DDG cache + global rate limiter keep the load manageable.
+        return multi_domain_search(
+            queries, "Reddit", limit, url_filter=_label,
+            max_queries=20,
+        )
