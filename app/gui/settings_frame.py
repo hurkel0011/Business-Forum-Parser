@@ -137,14 +137,25 @@ class SettingsFrame(ctk.CTkFrame):
         kws = [k.strip() for k in self.keywords_entry.get().split(",") if k.strip()]
         self.config.set("keywords", kws)
 
-        try:
-            self.config.set("min_lead_score", float(self.min_score_entry.get()))
-        except ValueError:
-            pass
+        # Validate min_score: must be a number between 1 and 10
+        raw_score = self.min_score_entry.get().strip()
+        score_warning = ""
+        if raw_score:
+            try:
+                score = float(raw_score)
+                if 1.0 <= score <= 10.0:
+                    self.config.set("min_lead_score", score)
+                else:
+                    score_warning = f"Min score must be 1-10 (got {score}). Kept previous value."
+            except ValueError:
+                score_warning = f"Min score must be a number (got '{raw_score}'). Kept previous value."
 
         self.config.save()
-        self.status_label.configure(text="Settings saved!")
-        self.after(3000, lambda: self.status_label.configure(text=""))
+        if score_warning:
+            self.status_label.configure(text=score_warning, text_color="#eab308")
+        else:
+            self.status_label.configure(text="Settings saved!", text_color="#22c55e")
+        self.after(5000, lambda: self.status_label.configure(text=""))
 
     def _test_api_key(self):
         """Make a tiny request to Anthropic to verify the key works."""
