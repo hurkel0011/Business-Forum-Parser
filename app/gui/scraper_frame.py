@@ -416,11 +416,11 @@ class ScraperFrame(ctk.CTkFrame):
                     f"({s['hit_rate']*100:.0f}% hit rate)"
                 ))
                 if cache_stats["cached_input_tokens"] > 0:
-                    # Estimate savings: cached tokens cost ~10% vs full price
-                    savings_pct = 90
-                    self._ui(lambda s=cache_stats, p=savings_pct: self._log(
-                        f"  {s['cached_input_tokens']:,} tokens served from cache "
-                        f"(~{p}% input cost reduction on those tokens)"
+                    # Sonnet 4.5: $3/M input, $0.30/M cached input (10x cheaper)
+                    cached = cache_stats["cached_input_tokens"]
+                    saved_dollars = cached * (3.0 - 0.30) / 1_000_000
+                    self._ui(lambda c=cached, sd=saved_dollars: self._log(
+                        f"  {c:,} tokens served from cache (saved ~${sd:.3f})"
                     ))
             self._ui(lambda: self.progress_bar.set(1.0))
             self._ui(lambda la=leads_added: self.status_label.configure(
