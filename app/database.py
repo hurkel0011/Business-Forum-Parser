@@ -46,6 +46,7 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(lead_score DESC);
             CREATE INDEX IF NOT EXISTS idx_leads_source ON leads(source);
             CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+            CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at DESC);
 
             CREATE TABLE IF NOT EXISTS scrape_runs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -171,6 +172,8 @@ class Database:
             query += " ORDER BY estimated_hours ASC, lead_score DESC"
         elif sort == "revenue":
             query += " ORDER BY CASE revenue_potential WHEN 'premium' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END, lead_score DESC"
+        elif sort == "newest":
+            query += " ORDER BY created_at DESC, lead_score DESC"
         else:
             query += " ORDER BY lead_score DESC, created_at DESC"
 

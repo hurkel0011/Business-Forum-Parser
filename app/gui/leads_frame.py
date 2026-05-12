@@ -83,7 +83,7 @@ class LeadsFrame(ctk.CTkFrame):
         ctk.CTkLabel(filter_frame, text="Sort by:").grid(row=1, column=6, padx=(10, 5), pady=5)
         self.sort_filter = ctk.CTkComboBox(
             filter_frame,
-            values=["Highest Score", "Easiest First", "Hardest First", "Quickest Wins", "Best Revenue"],
+            values=["Highest Score", "Newest First", "Easiest First", "Hardest First", "Quickest Wins", "Best Revenue"],
             width=140, command=lambda _: self.refresh(),
         )
         self.sort_filter.set("Highest Score")
@@ -193,6 +193,7 @@ class LeadsFrame(ctk.CTkFrame):
         # Sort
         sort_map = {
             "Highest Score": "score",
+            "Newest First": "newest",
             "Easiest First": "easiest",
             "Hardest First": "hardest",
             "Quickest Wins": "quickest",
