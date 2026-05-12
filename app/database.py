@@ -174,7 +174,11 @@ class Database:
         else:
             query += " ORDER BY lead_score DESC, created_at DESC"
 
-        return self.conn.execute(query, params).fetchall()
+        # Return dicts (not sqlite3.Row) so callers can use .get() with defaults.
+        # sqlite3.Row supports indexing but raises IndexError on missing keys,
+        # which breaks the GUI code that uses .get() for optional fields.
+        rows = self.conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
 
     def update_lead_status(self, lead_id, status, notes=None):
         if notes:
