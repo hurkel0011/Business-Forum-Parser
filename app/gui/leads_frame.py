@@ -319,6 +319,40 @@ class LeadsFrame(ctk.CTkFrame):
 
         self.detail_label.configure(text=detail_text)
 
+    def _confirm_delete(self, title):
+        """Show a modal yes/no popup, return True if user confirms."""
+        popup = ctk.CTkToplevel(self)
+        popup.title("Delete lead?")
+        popup.geometry("420x160")
+        popup.attributes("-topmost", True)
+        popup.grab_set()  # modal
+
+        ctk.CTkLabel(
+            popup, text=f"Delete this lead?\n\n{title}",
+            wraplength=380, justify="left",
+        ).pack(padx=20, pady=(20, 10))
+
+        result = {"confirmed": False}
+
+        btn_frame = ctk.CTkFrame(popup, fg_color="transparent")
+        btn_frame.pack(pady=(5, 15))
+
+        def _confirm():
+            result["confirmed"] = True
+            popup.destroy()
+
+        ctk.CTkButton(
+            btn_frame, text="Cancel", width=100, fg_color="gray40",
+            command=popup.destroy,
+        ).pack(side="left", padx=5)
+        ctk.CTkButton(
+            btn_frame, text="Delete", width=100, fg_color="#ef4444",
+            command=_confirm,
+        ).pack(side="left", padx=5)
+
+        self.wait_window(popup)
+        return result["confirmed"]
+
     def _open_url(self):
         if self._current_url:
             webbrowser.open(self._current_url)
@@ -334,6 +368,12 @@ class LeadsFrame(ctk.CTkFrame):
     def _delete_lead(self):
         if not self._current_lead:
             return
+
+        # Confirm before destructive action
+        title = self._current_lead.get("title", "this lead")[:60]
+        if not self._confirm_delete(title):
+            return
+
         lead_id = self._current_lead["id"]
         self.db.delete_lead(lead_id)
         self._current_lead = None
