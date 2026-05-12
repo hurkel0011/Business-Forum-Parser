@@ -119,9 +119,17 @@ NEGATIVE_SIGNALS = {
     "solved": -5, "fixed it": -5, "nvm": -6, "never mind": -6,
     "figured it out": -5, "working now": -5, "resolved": -5,
     "update: fixed": -6, "edit: solved": -6,
-    # Educational / not real problems
+    # Educational / tutorials (not someone with a problem)
     "tutorial": -3, "how to": -2, "eli5": -3,
+    "step by step": -3, "beginner's guide": -4, "getting started": -3,
+    "cheat sheet": -4, "tips and tricks": -3,
+    "common errors and how to fix": -5, "error messages and how to": -5,
+    "best practices": -3,
+    # Opinion / editorial / discussion
     "opinion": -3, "what do you think": -2, "discussion": -2,
+    "is killing": -3, "is shaping": -4, "the future of": -3,
+    "the rise of": -4, "the death of": -4, "the state of": -3,
+    "hot take": -4, "unpopular opinion": -4,
     "meme": -6, "joke": -5, "shower thought": -6,
     "hiring": -2, "job posting": -3,
     # Documentation / not a complaint
@@ -132,6 +140,13 @@ NEGATIVE_SIGNALS = {
     "i built": -4, "i made": -4, "just launched": -5,
     "introducing": -4, "we're excited": -5, "now available": -4,
     "open source": -2, "side project": -3,
+    # Career / general life (not technical problems)
+    "career advice": -4, "resume": -3, "interview": -3,
+    "salary": -3, "job market": -4, "laid off": -3,
+    "i wrote a": -3, "i created a": -3,
+    # News / journalism
+    "according to": -2, "report says": -3, "study finds": -3,
+    "researchers": -3, "experts say": -3,
 }
 
 
@@ -181,6 +196,25 @@ def prescore(post):
     caps_words = len(re.findall(r'\b[A-Z]{4,}\b', post.get("content", "")))
     if caps_words >= 2:
         score += 2
+
+    # Penalty for article/editorial titles (not someone with a problem)
+    title = post.get("title", "").lower()
+    editorial_patterns = [
+        r"^how .+ is (killing|changing|shaping|transforming|disrupting)",
+        r"^the (rise|death|future|state|end) of ",
+        r"^why .+ (is|are) (dead|dying|overrated|wrong)",
+        r"^\d+ (ways|tips|steps|things|reasons) ",
+        r"^(a|the) .+ guide to ",
+        r"common .+ errors? .+ (fix|solv|resolv)",
+        r"^what .+ taught me",
+        r"^i (wrote|built|made|created) (a|an|my|the) ",
+        r"^gaming on ",
+        r"explained",
+    ]
+    for pat in editorial_patterns:
+        if re.search(pat, title):
+            score -= 4
+            break
 
     # Bonus for forum/community source URLs
     url = post.get("url", "").lower()
