@@ -7,6 +7,7 @@ from .settings_frame import SettingsFrame
 # Project identity — proof of authorship
 _BUILD_SIGNATURE = "BonnieTheDog420"
 __author__ = "Howell Brady"
+APP_VERSION = "1.6.1"
 
 
 class MainWindow(ctk.CTk):
@@ -18,7 +19,7 @@ class MainWindow(ctk.CTk):
         self.db = database
         self.config = config
 
-        self.title("Business Forum Parser v1.6.1")
+        self.title(f"Business Forum Parser v{APP_VERSION}")
         self.geometry("1200x750")
         self.minsize(900, 600)
 
@@ -52,7 +53,7 @@ class MainWindow(ctk.CTk):
 
         version = ctk.CTkLabel(
             self.sidebar,
-            text="v1.5.2",
+            text=f"v{APP_VERSION}",
             font=ctk.CTkFont(size=12),
             text_color="gray",
         )

@@ -414,8 +414,9 @@ class ScraperFrame(ctk.CTkFrame):
                     self._ui(lambda e=e: self._log(f"  ✗ Error: {e}"))
 
             # ── DONE ─────────────────────────────────────────────
+            from .main_window import APP_VERSION
             self.db.log_scrape_run(
-                "v1.6.1", query or "wide search", len(all_posts), leads_added
+                f"v{APP_VERSION}", query or "wide search", len(all_posts), leads_added
             )
 
             conv = leads_added * 100 // max(len(to_classify), 1)
