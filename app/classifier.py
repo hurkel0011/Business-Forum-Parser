@@ -100,9 +100,60 @@ class LeadClassifier:
         self.model = None
         self._errors = 0
 
+    # Pain signal words for smart content truncation
+    _PAIN_WORDS = {
+        "error", "broken", "broken", "failed", "failing", "crash",
+        "bug", "issue", "problem", "help", "frustrated", "urgent",
+        "blocked", "stuck", "not working", "doesn't work", "stopped",
+        "integration", "api", "webhook", "sync", "migrate", "migration",
+        "workaround", "fix", "desperate", "losing", "money", "pay",
+    }
+
     def _report(self, msg):
         if self.error_callback:
             self.error_callback(msg)
+
+    @staticmethod
+    def _smart_truncate(content, max_len):
+        """Extract the most relevant paragraphs instead of blind truncation.
+
+        Prioritizes paragraphs that contain pain signals, error messages, or
+        technical details over generic introduction text.
+        """
+        paragraphs = [p.strip() for p in content.split("\n") if len(p.strip()) > 20]
+
+        if not paragraphs:
+            return content[:max_len]
+
+        # Score each paragraph by pain relevance
+        pain_words = LeadClassifier._PAIN_WORDS
+        scored = []
+        for i, para in enumerate(paragraphs):
+            para_lower = para.lower()
+            score = sum(1 for w in pain_words if w in para_lower)
+            # Boost first paragraph (context) and any with error codes
+            if i == 0:
+                score += 2
+            if any(c in para for c in ["500", "404", "403", "ERROR", "Exception", "Traceback"]):
+                score += 3
+            scored.append((score, i, para))
+
+        # Sort by relevance, keeping position info
+        scored.sort(key=lambda x: (-x[0], x[1]))
+
+        # Take the most relevant paragraphs, up to max_len
+        selected = []
+        total = 0
+        for _score, _idx, para in scored:
+            if total + len(para) + 1 > max_len:
+                break
+            selected.append((_idx, para))
+            total += len(para) + 1
+
+        # Re-sort by original position for readability
+        selected.sort(key=lambda x: x[0])
+
+        return "\n".join(p for _, p in selected)
 
     def _find_working_model(self):
         """Try each model until one works."""
@@ -134,10 +185,14 @@ class LeadClassifier:
         if len(content) < 20:
             content = title
 
+        # Smart content preparation — prioritize pain-signal paragraphs
+        if len(content) > 2500:
+            content = self._smart_truncate(content, 2500)
+
         prompt = CLASSIFY_PROMPT.format(
             source=post.get("source", "Unknown"),
             title=title,
-            content=content[:2500],
+            content=content,
         )
 
         for attempt in range(3):

@@ -266,6 +266,24 @@ class Database:
         )
         self.conn.commit()
 
+    def get_scrape_history(self, limit=20):
+        """Get recent scrape runs for performance tracking."""
+        return self.conn.execute(
+            "SELECT * FROM scrape_runs ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+
+    def get_source_performance(self):
+        """Get lead conversion rate by source — which sources produce the best leads."""
+        return self.conn.execute(
+            """SELECT source, COUNT(*) as count,
+                      AVG(lead_score) as avg_score,
+                      SUM(CASE WHEN lead_score >= 5 THEN 1 ELSE 0 END) as high_value,
+                      AVG(CASE WHEN estimated_hours > 0 THEN estimated_hours END) as avg_hours
+               FROM leads
+               GROUP BY source
+               ORDER BY avg_score DESC"""
+        ).fetchall()
+
     def delete_lead(self, lead_id):
         self.conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
         self.conn.commit()
