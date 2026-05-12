@@ -44,9 +44,10 @@ Original post snippet:
 
 
 MODELS = [
-    "claude-haiku-4-5-20251001",
+    # Sonnet 4.5 first — supports prompt caching for cost savings on batch use
     "claude-sonnet-4-5-20250929",
     "claude-sonnet-4-6",
+    "claude-haiku-4-5-20251001",
 ]
 
 

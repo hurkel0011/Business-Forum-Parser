@@ -388,6 +388,22 @@ class ScraperFrame(ctk.CTkFrame):
                 f"DONE: {la} leads from {ap} scraped → {tc} classified ({c}% conversion)\n"
                 f"{'━' * 50}"
             ))
+
+            # Log prompt cache performance — Sonnet 4.5 caches system prompt
+            # for 90% input cost reduction on calls after the first
+            cache_stats = classifier.get_cache_stats()
+            if cache_stats["cache_hits"] + cache_stats["cache_misses"] > 0:
+                self._ui(lambda s=cache_stats: self._log(
+                    f"Prompt cache: {s['cache_hits']} hits / {s['cache_misses']} misses "
+                    f"({s['hit_rate']*100:.0f}% hit rate)"
+                ))
+                if cache_stats["cached_input_tokens"] > 0:
+                    # Estimate savings: cached tokens cost ~10% vs full price
+                    savings_pct = 90
+                    self._ui(lambda s=cache_stats, p=savings_pct: self._log(
+                        f"  {s['cached_input_tokens']:,} tokens served from cache "
+                        f"(~{p}% input cost reduction on those tokens)"
+                    ))
             self._ui(lambda: self.progress_bar.set(1.0))
             self._ui(lambda la=leads_added: self.status_label.configure(
                 text=f"Complete — {la} new leads added"

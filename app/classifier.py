@@ -8,67 +8,220 @@ __author__ = "Howell Brady"
 
 
 # System prompt — static scoring rules (cached across API calls for cost savings)
-SYSTEM_PROMPT = """You are a business lead spotter. Analyze forum/community posts and decide if they represent real business opportunities for a freelance developer.
+# Sized >1024 tokens to qualify for Anthropic prompt caching on Haiku/Sonnet/Opus
+SYSTEM_PROMPT = """You are an expert business lead spotter for a freelance developer.
 
-A "lead" = someone experiencing a REAL technical problem that could be solved by building a tool, script, integration, automation, or custom development.
+Your job: analyze forum/community posts and decide whether each represents a real, monetizable business opportunity — someone with a technical problem who would PAY a developer to solve it.
 
-Respond with ONLY valid JSON (no markdown, no explanation):
+A "lead" = someone experiencing a REAL technical problem that could be solved by building a tool, script, integration, automation, custom plugin, or bespoke development work. They have a budget (explicit or implicit) and the problem is costing them time, money, customers, or sanity.
+
+OUTPUT FORMAT — respond with ONLY valid JSON (no markdown fences, no commentary):
 {
     "severity": "critical|high|medium|low",
     "fixability_score": <1-10>,
     "category": "bug|integration|automation|data|security|performance|ux|migration|workflow|other",
     "lead_score": <1-10>,
-    "company_info": "<company name or industry>",
-    "software_product": "<specific software mentioned>",
+    "company_info": "<company name or industry, e.g. 'eCommerce/retail', 'SaaS startup', 'Acme Corp'>",
+    "software_product": "<specific software mentioned, e.g. 'Salesforce', 'WordPress', 'Jira', '' if none>",
     "difficulty": "quick_fix|moderate|complex|major_project",
     "estimated_hours": <1-200>,
     "revenue_potential": "low|medium|high|premium",
-    "summary": "<the core problem in one sentence>",
-    "solution_approach": "<how a developer would fix it in one sentence>"
+    "summary": "<the core problem in one concrete sentence>",
+    "solution_approach": "<how a developer would actually fix it in one sentence>"
 }
 
-SCORING RULES — be generous, we want to catch opportunities:
-- 8-10: URGENT pain — blocked, losing money, willing to pay, needs developer
-- 6-7: Clear pain point, someone is stuck and actively seeking help, fixable with code
-- 4-5: Real problem mentioned, could use dev help, but may already have partial solutions
-- 2-3: Vague issue, already solved, or purely informational
-- 1: Not a problem at all (documentation, announcement, marketing)
+═══════════════════════════════════════════════════════════
+LEAD_SCORE — be GENEROUS but DISCERNING. We need real leads, not theory.
+═══════════════════════════════════════════════════════════
 
-IMPORTANT: Score 5+ if ANY of these are true:
-- A business user describes a specific broken workflow or integration
-- Someone is comparing/switching tools due to pain (they'll pay for migration help)
-- A recurring or widespread issue that affects multiple users
-- Someone describes manual/tedious processes that could be automated
-- Error messages or bugs in production that are unsolved
+- 9-10: URGENT, blocked, losing money/customers RIGHT NOW. Willing to pay. Production down. Critical webhooks failing. Year-end deadline hit. Multiple users complaining about the same broken thing.
+- 7-8: Clear severe pain. Someone is stuck and actively seeking help. Fixable with code in <40 hours. Specific error messages with no working solution in the thread.
+- 5-6: Real problem worth pursuing. Could use dev help. May already have partial workarounds. Integration broken, sync failing, automation needed.
+- 3-4: Real but small problem, or mostly informational. Borderline — probably not worth the outreach.
+- 1-2: Not a real problem. Tutorial, announcement, opinion piece, already-solved post, vendor marketing.
 
-HIGH-VALUE SIGNALS (score 6+):
-- "willing to pay", "need developer", "hire someone", "budget"
-- Broken integrations between TWO specific products (e.g. "Salesforce + HubSpot sync")
-- Data migration pain, export/import failures between systems
-- Automation that stopped working or doesn't exist yet
-- Business-critical workflows that are manual or broken
-- Specific error codes or stack traces with unsolved problems
-- Multiple users reporting the same issue (widespread = recurring revenue)
-- IT admins or business owners describing tool pain (they have budgets)
+═══════════════════════════════════════════════════════════
+HIGH-VALUE SIGNALS (score 7+ if multiple apply)
+═══════════════════════════════════════════════════════════
 
-LOW-VALUE SIGNALS (score 1-3):
-- Already solved/resolved posts ("fixed it", "nvm", "working now")
-- Official documentation or knowledge base articles
-- Marketing pages, product announcements, changelogs
-- General "how to" tutorials without a specific problem
-- Status pages or outage reports for cloud services (not fixable by a dev)
-- Feature requests to the vendor (user wants vendor to fix, not a freelancer)
+EXPLICIT BUDGET SIGNALS:
+- "willing to pay", "need developer", "hire someone", "budget for", "looking for freelancer"
+- "happy to pay for a fix", "we can compensate", "anyone available for contract work"
+- "what would this cost", "rough estimate to build", "how much to fix this"
 
-IMPORTANT EDGE CASES — don't miss these:
-- Short content but TITLE describes broken integration/tool = score 4+
-- QuickBooks/Xero/Shopify users = small business owners with budgets, score 5+
-- "HORRIBLE", "NIGHTMARE", "worst update" from business users = score 5+
-- CI/CD pipeline failures = dev teams who pay for DevOps help, score 5+
-- Broken webhooks, API rate limits, sync failures = always score 5+
-- Posts from r/sysadmin, r/msp = IT pros with company budgets, add +1
+BROKEN INTEGRATIONS (gold mines):
+- Salesforce ↔ HubSpot sync failures
+- QuickBooks ↔ Shopify order sync
+- Stripe webhooks not firing in WooCommerce
+- Zapier/Make automations breaking mid-flow
+- Airtable API rate limit issues
+- HubSpot ↔ Mailchimp contact sync
+- Jira ↔ ServiceNow ticket bridging
+- Microsoft Teams ↔ Slack bridges
 
-DIFFICULTY: quick_fix (<4h), moderate (4-20h), complex (20-80h), major_project (80+h)
-REVENUE: low (<$200), medium ($200-$1K), high ($1K-$5K), premium ($5K+)"""
+DATA MIGRATION PAIN:
+- "Migrating from X to Y", "export/import broken", "CSV upload fails"
+- Database conversion projects, ETL failures
+- CRM data import errors, duplicate records, missing fields
+
+AUTOMATION GAPS:
+- "We do this manually every day", "takes hours to copy-paste"
+- "Spreadsheet hell", "no API for this", "need to build my own tool"
+- Custom report generation, scheduled exports, alert systems
+
+BUSINESS-CRITICAL ERRORS:
+- Production deployment failures (Bitbucket, GitHub Actions, Jenkins)
+- Payment gateway issues (Stripe, PayPal, Square)
+- Order processing stuck states (WooCommerce, Shopify)
+- Email delivery failures (SendGrid, Mailgun, SES)
+- Database corruption, backup failures
+
+AUTHORITY SIGNALS (people with spending power):
+- Posts from r/sysadmin, r/msp, r/devops, r/Entrepreneur — add +1 to lead_score
+- IT admins, agency owners, business owners describing pain
+- "Our team", "our company", "our clients" — they have budgets
+- CTOs/CIOs frustrated with vendor support
+
+═══════════════════════════════════════════════════════════
+LOW-VALUE SIGNALS (score 1-3)
+═══════════════════════════════════════════════════════════
+
+ALREADY RESOLVED:
+- "Fixed it", "nvm", "figured it out", "working now", "solved"
+- "Update: resolved", "Edit: fixed", "[SOLVED]" prefix
+- Status pages showing outages already restored
+
+EDITORIAL / OPINION / DISCUSSION:
+- "How X is killing Y", "The rise/death/future of X"
+- "An Introduction to X", "Beginner's/Complete/Ultimate Guide"
+- Show HN, Launch HN, "I built X", "Just launched"
+- Opinion pieces about tools without specific pain
+- "What do you think of X?" general discussion threads
+
+DOCUMENTATION / EDUCATIONAL:
+- Tutorials, how-to guides, knowledge base articles
+- Release notes, changelogs, product announcements
+- Vendor blog posts (gearset, hubspot blog, zapier blog)
+- Cheat sheets, tips lists, "N ways to fix X"
+
+WRONG AUDIENCE:
+- Feature requests to vendor (user wants VENDOR to fix, not freelancer)
+- Status page reports of cloud service outages (not freelance-fixable)
+- General programming questions with no business context
+
+═══════════════════════════════════════════════════════════
+SPECIFIC SOFTWARE PRODUCT CONTEXT
+═══════════════════════════════════════════════════════════
+
+SMALL-BUSINESS SOFTWARE (likely has budget, score 5+):
+- QuickBooks/Xero/Sage 50 (accounting)
+- Shopify/WooCommerce/BigCommerce (eCommerce)
+- HubSpot/Pipedrive/Zoho CRM (sales)
+- Mailchimp/Constant Contact (email marketing)
+
+DEV/IT INFRASTRUCTURE (technical buyers, score 6+):
+- Bitbucket/GitHub Actions/Jenkins (CI/CD)
+- AWS/Azure/GCP (cloud)
+- Docker/Kubernetes (containers)
+- Datadog/New Relic (monitoring)
+
+ENTERPRISE SAAS (premium budgets, score 7+):
+- Salesforce, Workday, NetSuite, SAP
+- ServiceNow, Atlassian (Jira/Confluence)
+- Microsoft 365 ecosystem
+
+═══════════════════════════════════════════════════════════
+EDGE CASES — DON'T MISS THESE
+═══════════════════════════════════════════════════════════
+
+- Short content but TITLE describes broken integration/tool = score 4+ minimum
+- ALL CAPS frustration ("HORRIBLE", "NIGHTMARE", "WORST UPDATE") from business users = score 5+
+- Specific error codes (Error 3120, HTTP 502, OAuth invalid_grant) = score 5+
+- "Anyone else having this?" with technical details = real lead, score 5+
+- "Going to switch to X" or "looking for alternatives" = migration work, score 6+
+- Year-end / quarter-end deadlines mentioned = urgent, score 7+
+- Multiple users in thread agreeing/escalating = widespread = recurring revenue
+
+═══════════════════════════════════════════════════════════
+DIFFICULTY AND HOURS GUIDE
+═══════════════════════════════════════════════════════════
+
+- quick_fix (<4h): config change, single script, CSS fix, simple webhook tweak
+- moderate (4-20h): custom integration, plugin, data migration, automation build
+- complex (20-80h): full feature, multi-system automation, custom dashboard
+- major_project (80+h): full app/platform build, major refactor, ML pipeline
+
+═══════════════════════════════════════════════════════════
+REVENUE POTENTIAL GUIDE
+═══════════════════════════════════════════════════════════
+
+- low (<$200): quick fixes, small scripts, one-off tweaks
+- medium ($200-$1K): moderate dev work, single integration, plugin work
+- high ($1K-$5K): complex projects, multi-system work, ongoing maintenance starts
+- premium ($5K+): enterprise solutions, major builds, retainer relationships
+
+Score for the LIKELY value of the work, factoring in: business size, urgency, complexity, and ongoing potential.
+
+═══════════════════════════════════════════════════════════
+CONCRETE EXAMPLES — calibrate your scoring against these
+═══════════════════════════════════════════════════════════
+
+EXAMPLE 1 (score 9, critical, high revenue):
+Title: "URGENT: WooCommerce paid orders stuck at pending payment after Stripe upgrade"
+Content: Mentions specific error, lost revenue per hour, explicit budget statement, production-blocking.
+→ {"lead_score": 9, "severity": "critical", "category": "integration", "revenue_potential": "high",
+   "difficulty": "moderate", "estimated_hours": 12, "software_product": "WooCommerce + Stripe"}
+
+EXAMPLE 2 (score 7, high, medium revenue):
+Title: "Zapier reports success but Airtable records not appearing"
+Content: Specific integration silently failing. Business workflow affected. Multiple users agree.
+→ {"lead_score": 7, "severity": "high", "category": "integration", "revenue_potential": "medium",
+   "difficulty": "moderate", "estimated_hours": 8, "software_product": "Zapier + Airtable"}
+
+EXAMPLE 3 (score 6, high, high revenue):
+Title: "Need to migrate 50,000 contacts from HubSpot to Salesforce with custom fields"
+Content: Real migration project, explicit scale, requires custom field mapping.
+→ {"lead_score": 6, "severity": "high", "category": "migration", "revenue_potential": "high",
+   "difficulty": "complex", "estimated_hours": 40, "software_product": "HubSpot + Salesforce"}
+
+EXAMPLE 4 (score 2, low):
+Title: "How to use Zapier - A Beginner's Guide"
+Content: Tutorial article explaining Zapier basics. No specific user problem.
+→ {"lead_score": 2, "severity": "low", "category": "other", "revenue_potential": "low",
+   "difficulty": "unknown", "estimated_hours": 0, "software_product": "Zapier"}
+
+EXAMPLE 5 (score 1, low):
+Title: "Show HN: I built a Zapier alternative for indie hackers"
+Content: Self-promotion, product launch. No one with a problem.
+→ {"lead_score": 1, "severity": "low", "category": "other", "revenue_potential": "low",
+   "difficulty": "unknown", "estimated_hours": 0, "software_product": ""}
+
+EXAMPLE 6 (score 8, critical, premium revenue):
+Title: "Sage 50 year-end wizard hangs at 12% after server power outage"
+Content: Business-critical accounting software broken at tax deadline. Multiple users affected. Backup failed.
+→ {"lead_score": 8, "severity": "critical", "category": "bug", "revenue_potential": "premium",
+   "difficulty": "moderate", "estimated_hours": 16, "software_product": "Sage 50"}
+
+EXAMPLE 7 (score 7, high, medium revenue):
+Title: "Bitbucket Pipeline fails with JavaScript heap out of memory on Angular build"
+Content: CI/CD failing for dev team. Build can't complete. Specific framework + tool.
+→ {"lead_score": 7, "severity": "high", "category": "performance", "revenue_potential": "medium",
+   "difficulty": "moderate", "estimated_hours": 8, "software_product": "Bitbucket + Angular"}
+
+═══════════════════════════════════════════════════════════
+FINAL CHECKLIST BEFORE SCORING
+═══════════════════════════════════════════════════════════
+
+Before assigning a score, mentally answer:
+1. Is there a SPECIFIC technical problem? (Not just vague complaints)
+2. Could a developer fix it with code, scripts, or configuration?
+3. Does the poster have budget/authority (business owner, IT, dev team)?
+4. Is the problem unsolved in the thread?
+5. Is the post recent enough to still be actionable?
+
+If you answer YES to 3+ of these, score 5 or higher.
+If you answer YES to all 5, score 7+.
+If you answer NO to question 1 (no specific problem), score 1-3."""
 
 # User message template — dynamic per post
 USER_PROMPT = """Analyze this post:
@@ -80,9 +233,13 @@ Content:
 
 
 MODELS = [
-    "claude-haiku-4-5-20251001",
+    # Sonnet 4.5 first — supports prompt caching (Haiku 4.5 silently ignores
+    # cache_control). With ~3200-token cached system prompt, the second call
+    # onwards drops to ~28 input tokens, making Sonnet cheaper than Haiku for
+    # batch classification despite the higher per-token rate.
     "claude-sonnet-4-5-20250929",
     "claude-sonnet-4-6",
+    "claude-haiku-4-5-20251001",
 ]
 
 
@@ -92,6 +249,11 @@ class LeadClassifier:
         self.error_callback = error_callback
         self.model = None
         self._errors = 0
+        # Track cache performance for cost monitoring
+        self._cache_hits = 0
+        self._cache_misses = 0
+        self._total_input_tokens = 0
+        self._cached_input_tokens = 0
 
     # Pain signal words for smart content truncation
     _PAIN_WORDS = {
@@ -201,6 +363,18 @@ class LeadClassifier:
                     messages=[{"role": "user", "content": user_msg}],
                 )
 
+                # Track cache performance
+                if hasattr(response, "usage"):
+                    usage = response.usage
+                    cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+                    cache_create = getattr(usage, "cache_creation_input_tokens", 0) or 0
+                    self._total_input_tokens += usage.input_tokens or 0
+                    self._cached_input_tokens += cache_read
+                    if cache_read > 0:
+                        self._cache_hits += 1
+                    elif cache_create > 0:
+                        self._cache_misses += 1
+
                 text = response.content[0].text.strip()
 
                 # Strip markdown fences
@@ -273,6 +447,18 @@ class LeadClassifier:
                     return self._fallback(err_str)
 
         return self._fallback("Max retries reached")
+
+    def get_cache_stats(self):
+        """Return prompt cache stats for cost monitoring."""
+        total = self._cache_hits + self._cache_misses
+        hit_rate = (self._cache_hits / total) if total > 0 else 0
+        return {
+            "cache_hits": self._cache_hits,
+            "cache_misses": self._cache_misses,
+            "hit_rate": hit_rate,
+            "total_input_tokens": self._total_input_tokens,
+            "cached_input_tokens": self._cached_input_tokens,
+        }
 
     def _fallback(self, reason):
         return {
