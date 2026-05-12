@@ -79,8 +79,29 @@ class SettingsFrame(ctk.CTkFrame):
             command=self._save,
         ).grid(row=3, column=0, padx=20, pady=15, sticky="ew")
 
+        # Database backup
+        backup_frame = ctk.CTkFrame(self)
+        backup_frame.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        backup_frame.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            backup_frame, text="Database",
+            font=ctk.CTkFont(size=16, weight="bold"),
+        ).grid(row=0, column=0, columnspan=2, padx=15, pady=(15, 5), sticky="w")
+
+        ctk.CTkLabel(
+            backup_frame,
+            text="Back up your leads database to a safe location.",
+            font=ctk.CTkFont(size=11), text_color="gray",
+        ).grid(row=1, column=0, padx=15, pady=(0, 8), sticky="w")
+
+        ctk.CTkButton(
+            backup_frame, text="Backup Database", width=160,
+            command=self._backup_db,
+        ).grid(row=2, column=0, padx=15, pady=(0, 15), sticky="w")
+
         self.status_label = ctk.CTkLabel(self, text="", text_color="#22c55e")
-        self.status_label.grid(row=4, column=0, padx=20, pady=5)
+        self.status_label.grid(row=5, column=0, padx=20, pady=5)
 
         self._load_values()
 
@@ -115,6 +136,45 @@ class SettingsFrame(ctk.CTkFrame):
         self.config.save()
         self.status_label.configure(text="Settings saved!")
         self.after(3000, lambda: self.status_label.configure(text=""))
+
+    def _backup_db(self):
+        """Copy the SQLite DB to a user-chosen location."""
+        from tkinter import filedialog
+        from datetime import datetime
+        import shutil
+        import os
+
+        # Find the active database path
+        db_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "data", "forum_parser.db",
+        )
+        if not os.path.exists(db_path):
+            self.status_label.configure(
+                text="No database file found.", text_color="#ef4444",
+            )
+            return
+
+        default_name = f"forum_parser_backup_{datetime.now():%Y%m%d_%H%M%S}.db"
+        target = filedialog.asksaveasfilename(
+            defaultextension=".db",
+            filetypes=[("SQLite DB", "*.db"), ("All files", "*.*")],
+            initialfile=default_name,
+        )
+        if not target:
+            return
+
+        try:
+            shutil.copy2(db_path, target)
+            self.status_label.configure(
+                text=f"Backed up to {os.path.basename(target)}",
+                text_color="#22c55e",
+            )
+        except Exception as e:
+            self.status_label.configure(
+                text=f"Backup failed: {e}", text_color="#ef4444",
+            )
+        self.after(5000, lambda: self.status_label.configure(text=""))
 
     def refresh(self):
         pass
