@@ -413,10 +413,12 @@ class LeadsFrame(ctk.CTkFrame):
 
         # Reddit Reply (only shown for Reddit leads)
         reddit_reply = messages.get("reddit_reply", "")
+        next_row = 3
         if reddit_reply and reddit_reply.strip():
             reddit_frame = ctk.CTkFrame(popup)
-            reddit_frame.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
+            reddit_frame.grid(row=next_row, column=0, padx=20, pady=5, sticky="ew")
             reddit_frame.grid_columnconfigure(0, weight=1)
+            next_row += 1
 
             ctk.CTkLabel(
                 reddit_frame, text="Reddit Reply",
@@ -434,7 +436,7 @@ class LeadsFrame(ctk.CTkFrame):
 
         # LinkedIn DM
         li_frame = ctk.CTkFrame(popup)
-        li_frame.grid(row=3, column=0, padx=20, pady=5, sticky="ew")
+        li_frame.grid(row=next_row, column=0, padx=20, pady=5, sticky="ew")
         li_frame.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
@@ -450,10 +452,11 @@ class LeadsFrame(ctk.CTkFrame):
             li_frame, text="Copy", width=60,
             command=lambda: self._copy_text(li_text),
         ).grid(row=1, column=1, padx=(0, 12), pady=(0, 8))
+        next_row += 1
 
         # Email
         email_frame = ctk.CTkFrame(popup)
-        email_frame.grid(row=4, column=0, padx=20, pady=5, sticky="ew")
+        email_frame.grid(row=next_row, column=0, padx=20, pady=5, sticky="ew")
         email_frame.grid_columnconfigure(0, weight=1)
 
         subj = messages.get("email_subject", "")
@@ -475,18 +478,20 @@ class LeadsFrame(ctk.CTkFrame):
             email_frame, text="Copy", width=60,
             command=lambda: self._copy_text(email_text),
         ).grid(row=1, column=1, padx=(0, 12), pady=(0, 8))
+        next_row += 1
 
         # Tip
         ctk.CTkLabel(
             popup,
             text="Tip: Edit the messages above before sending — personalization wins deals.",
             text_color="gray", font=ctk.CTkFont(size=11),
-        ).grid(row=5, column=0, padx=20, pady=(5, 2), sticky="w")
+        ).grid(row=next_row, column=0, padx=20, pady=(5, 2), sticky="w")
+        next_row += 1
 
         ctk.CTkButton(
             popup, text="Close", width=100, fg_color="gray30",
             command=popup.destroy,
-        ).grid(row=6, column=0, padx=20, pady=(5, 15))
+        ).grid(row=next_row, column=0, padx=20, pady=(5, 15))
 
     def _copy_text(self, textbox):
         content = textbox.get("1.0", "end").strip()
