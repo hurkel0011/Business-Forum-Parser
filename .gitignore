@@ -21,6 +21,9 @@ data/*.db
 *.pem
 config.json
 
+# ── Test scripts ─────────────────────
+test_*.py
+
 # ── OS / Editor ──────────────────────
 .DS_Store
 Thumbs.db
