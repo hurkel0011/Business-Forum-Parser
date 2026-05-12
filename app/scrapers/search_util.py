@@ -17,6 +17,38 @@ log = logging.getLogger(__name__)
 _last_search_time = 0.0
 _search_lock = threading.Lock()
 
+# In-memory DDG result cache — reduces rate-limit pressure on repeat scrapes
+# Keyed by query string, TTL ~15 minutes
+_search_cache = {}
+_cache_lock = threading.Lock()
+_CACHE_TTL = 900  # 15 minutes
+
+
+def _cache_get(query):
+    """Return cached results if fresh, else None."""
+    with _cache_lock:
+        entry = _search_cache.get(query)
+        if not entry:
+            return None
+        ts, results = entry
+        if time.time() - ts > _CACHE_TTL:
+            del _search_cache[query]
+            return None
+        return list(results)  # defensive copy
+
+
+def _cache_set(query, results):
+    """Store results in cache with current timestamp."""
+    with _cache_lock:
+        _search_cache[query] = (time.time(), list(results))
+        # Bound cache size to prevent memory growth
+        if len(_search_cache) > 500:
+            # Drop oldest 100 entries
+            sorted_keys = sorted(_search_cache.keys(),
+                                 key=lambda k: _search_cache[k][0])
+            for k in sorted_keys[:100]:
+                del _search_cache[k]
+
 # ---------------------------------------------------------------------------
 # Junk filters — skip results that will never be useful leads
 # ---------------------------------------------------------------------------
@@ -198,9 +230,18 @@ def ddg_search(query, count=10):
     Supports site: operator (unlike Bing HTML scraping).
     Filters out ads, junk domains, homepages, and marketing pages.
 
+    Cached for 15 minutes to reduce DDG rate-limit pressure on
+    repeat scrapes.
+
     Returns:
         List of dicts with keys: title, content, url
     """
+    # Check cache first
+    cache_key = f"{query}|{count}"
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return cached
+
     _rate_limit()
     results = []
     try:
@@ -254,6 +295,10 @@ def ddg_search(query, count=10):
                         break
             except Exception:
                 pass
+
+    # Cache successful results (skip if empty — retry next time)
+    if results:
+        _cache_set(cache_key, results)
 
     return results
 
