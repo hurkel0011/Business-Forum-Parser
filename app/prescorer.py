@@ -189,6 +189,15 @@ def prescore(post):
     if any(s in url for s in forum_signals):
         score += 2
 
+    # Bonus for recency signals in content
+    recency_patterns = [
+        "2026", "2025", "today", "yesterday", "this week",
+        "this month", "just now", "recently", "still happening",
+        "still broken", "update:", "edit:",
+    ]
+    if any(p in text for p in recency_patterns):
+        score += 2
+
     # Normalize to 0-10 using a curve that spreads values better
     # Raw scores: 0-10 = low, 10-25 = medium, 25-50 = high, 50+ = very high
     if score <= 0:

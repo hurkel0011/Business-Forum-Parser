@@ -128,9 +128,35 @@ def enrich_post(post):
     if any(p in url_lower for p in _INDEX_PAGE_PATTERNS):
         return post
 
+    # For Reddit posts, try the JSON API first (more reliable than scraping)
+    if "reddit.com" in url_lower and "/comments/" in url_lower:
+        try:
+            json_url = url.rstrip("/") + ".json"
+            resp = requests.get(
+                json_url, headers=_get_headers(), timeout=15,
+                allow_redirects=True,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, list) and len(data) > 0:
+                    # First element is the post, second is comments
+                    post_data = data[0].get("data", {}).get("children", [{}])
+                    if post_data:
+                        selftext = post_data[0].get("data", {}).get("selftext", "")
+                        if len(selftext) > len(existing_content):
+                            post["content"] = selftext[:5000]
+                            return post
+        except Exception:
+            pass  # Fall through to HTML scraping
+
+    # Use old.reddit.com for HTML scraping (easier to parse)
+    fetch_url = url
+    if "www.reddit.com" in url_lower:
+        fetch_url = url.replace("www.reddit.com", "old.reddit.com")
+
     try:
         resp = requests.get(
-            url, headers=_get_headers(), timeout=15,
+            fetch_url, headers=_get_headers(), timeout=15,
             allow_redirects=True,
         )
         if resp.status_code != 200:
