@@ -216,12 +216,20 @@ def prescore(post):
             score -= 4
             break
 
-    # Bonus for forum/community source URLs
+    # Source-based adjustments
     url = post.get("url", "").lower()
+    source = post.get("source", "").lower()
+
+    # Bonus for forum/community URLs (people posting complaints)
     forum_signals = ["community.", "forum.", "discuss.", "support.",
                      "reddit.com", "stackoverflow.com", "github.com/issues"]
     if any(s in url for s in forum_signals):
         score += 2
+
+    # HN penalty — mostly editorials/discussions, not complaints
+    # HN posts that ARE leads will still pass because they have strong pain signals
+    if "news.ycombinator.com" in url or source == "hacker news":
+        score -= 3
 
     # Bonus for recency signals in content
     recency_patterns = [
