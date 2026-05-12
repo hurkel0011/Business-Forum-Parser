@@ -25,10 +25,19 @@ class SettingsFrame(ctk.CTkFrame):
         ctk.CTkLabel(api_frame, text="Anthropic API Key:").grid(
             row=1, column=0, padx=15, pady=5, sticky="w"
         )
+        anthropic_row = ctk.CTkFrame(api_frame, fg_color="transparent")
+        anthropic_row.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
+        anthropic_row.grid_columnconfigure(0, weight=1)
+
         self.anthropic_key = ctk.CTkEntry(
-            api_frame, show="*", placeholder_text="sk-ant-..."
+            anthropic_row, show="*", placeholder_text="sk-ant-..."
         )
-        self.anthropic_key.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
+        self.anthropic_key.grid(row=0, column=0, padx=(0, 5), sticky="ew")
+
+        ctk.CTkButton(
+            anthropic_row, text="Test", width=60,
+            command=self._test_api_key,
+        ).grid(row=0, column=1)
 
         ctk.CTkLabel(api_frame, text="GitHub Token (optional):").grid(
             row=2, column=0, padx=15, pady=5, sticky="w"
@@ -136,6 +145,41 @@ class SettingsFrame(ctk.CTkFrame):
         self.config.save()
         self.status_label.configure(text="Settings saved!")
         self.after(3000, lambda: self.status_label.configure(text=""))
+
+    def _test_api_key(self):
+        """Make a tiny request to Anthropic to verify the key works."""
+        import threading
+
+        key = self.anthropic_key.get().strip()
+        if not key:
+            self.status_label.configure(
+                text="Enter an API key first.", text_color="#ef4444",
+            )
+            return
+
+        self.status_label.configure(
+            text="Testing API key...", text_color="gray",
+        )
+
+        def _run():
+            try:
+                from anthropic import Anthropic
+                client = Anthropic(api_key=key)
+                resp = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=10,
+                    messages=[{"role": "user", "content": "Reply with: OK"}],
+                )
+                ok = bool(resp.content)
+                msg = "API key works!" if ok else "API key got empty response."
+                color = "#22c55e" if ok else "#ef4444"
+            except Exception as e:
+                msg = f"API key failed: {type(e).__name__}: {str(e)[:80]}"
+                color = "#ef4444"
+            self.after(0, lambda: self.status_label.configure(text=msg, text_color=color))
+            self.after(5000, lambda: self.status_label.configure(text=""))
+
+        threading.Thread(target=_run, daemon=True).start()
 
     def _backup_db(self):
         """Copy the SQLite DB to a user-chosen location."""
