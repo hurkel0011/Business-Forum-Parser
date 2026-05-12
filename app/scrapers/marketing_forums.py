@@ -13,6 +13,9 @@ QUERIES = [
     'site:reddit.com ActiveCampaign integration OR automation OR sync error help',
     'site:reddit.com Klaviyo integration OR sync OR "not working" error help',
     'site:reddit.com Moz OR SEMrush SEO crawl OR audit OR rank error help',
+    # Google Analytics / Tag Manager — huge integration pain
+    'site:reddit.com "Google Analytics" OR GA4 broken OR error OR migration OR "not working"',
+    'site:reddit.com "Google Tag Manager" OR GTM error OR broken OR tracking',
 ]
 
 

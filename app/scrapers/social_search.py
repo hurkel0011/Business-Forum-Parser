@@ -2,17 +2,16 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    # Site-targeted: Reddit discussions
-    'site:reddit.com SaaS broken frustrated switching',
-    'site:reddit.com software broken frustrated "need help" OR "looking for" fix',
-    'site:reddit.com smallbusiness OR entrepreneur software broken OR "not working" help',
-    'site:reddit.com webdev OR freelance "client needs" OR project developer',
-    # Site-targeted: other social
-    'site:linkedin.com "frustrated with" OR broken software OR SaaS post',
-    'site:linkedin.com "software problem" OR "integration issue" OR broken post',
-    # Site-targeted: more Reddit social queries
-    'site:reddit.com small business software issue OR broken OR "need help" fix',
-    'site:reddit.com SaaS OR software complaint OR broken "need developer" OR "looking for developer" help',
+    # LinkedIn — business decision makers with tool pain
+    'site:linkedin.com integration broken OR nightmare OR "not working"',
+    'site:linkedin.com CRM migration OR switching OR frustrated',
+    'site:linkedin.com "broken workflow" OR "broken automation" OR "broken integration"',
+    'site:linkedin.com Salesforce OR HubSpot OR Zendesk broken OR migration',
+    # Reddit — direct complaints
+    'site:reddit.com SaaS broken frustrated "need help" switching',
+    'site:reddit.com software broken "looking for developer" OR "hire someone"',
+    'site:reddit.com smallbusiness OR entrepreneur software broken OR "not working"',
+    'site:reddit.com webdev freelance "client needs" OR "looking for" project',
 ]
 
 

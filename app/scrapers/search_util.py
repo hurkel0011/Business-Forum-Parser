@@ -9,8 +9,13 @@ import re
 import time
 import random
 import logging
+import threading
 
 log = logging.getLogger(__name__)
+
+# Global rate limiter — prevents DDG from blocking us across all scrapers
+_last_search_time = 0.0
+_search_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Junk filters — skip results that will never be useful leads
@@ -37,10 +42,12 @@ JUNK_DOMAINS = {
     # Stock / finance (false positives for company name queries)
     "finance.yahoo.com", "fool.com", "marketwatch.com",
     "businesswire.com", "prnewswire.com",
-    # Tech blog / general troubleshooting (not forums)
+    # Tech blog / general troubleshooting / vendor marketing (not forums)
     "howtogeek.com", "makeuseof.com", "lifehacker.com",
     "pcmag.com", "techradar.com", "tomsguide.com",
     "cloudwards.net", "comparitech.com",
+    "gearset.com", "zapier.com/blog", "hubspot.com/blog",
+    "salesforce.com/blog", "atlassian.com/blog",
     # Chinese / non-English sites
     "zhihu.com", "baidu.com", "csdn.net",
     # Status / monitoring (outage reports, not fixable problems)
@@ -50,7 +57,8 @@ JUNK_DOMAINS = {
     "indeed.com", "glassdoor.com", "ziprecruiter.com",
     # Course / training / how-to sites
     "udemy.com", "coursera.org", "pluralsight.com",
-    "wikihow.com", "geeksforgeeks.org",
+    "wikihow.com", "geeksforgeeks.org", "lifewire.com",
+    "business.com/hr", "business.com/crm",  # generic how-to articles
     # App stores (not forums)
     "play.google.com", "apps.apple.com",
 }
@@ -149,6 +157,17 @@ def _is_junk(url, title):
 # DuckDuckGo search via ddgs package
 # ---------------------------------------------------------------------------
 
+def _rate_limit():
+    """Global rate limiter — ensures minimum 0.6s between DDG searches."""
+    global _last_search_time
+    with _search_lock:
+        now = time.time()
+        elapsed = now - _last_search_time
+        if elapsed < 0.6:
+            time.sleep(0.6 - elapsed + random.uniform(0, 0.2))
+        _last_search_time = time.time()
+
+
 def ddg_search(query, count=10):
     """Search DuckDuckGo and return filtered results.
 
@@ -159,6 +178,7 @@ def ddg_search(query, count=10):
     Returns:
         List of dicts with keys: title, content, url
     """
+    _rate_limit()
     results = []
     try:
         from ddgs import DDGS
@@ -192,7 +212,29 @@ def ddg_search(query, count=10):
     except ImportError:
         log.warning("ddgs package not installed — run: pip install ddgs")
     except Exception as exc:
-        log.debug("DDG search error: %s", exc)
+        log.debug("DDG search error for query '%s': %s", query[:50], exc)
+        # Retry once after a longer delay
+        if "Ratelimit" in str(exc) or "429" in str(exc):
+            time.sleep(2 + random.uniform(0, 1))
+            try:
+                from ddgs import DDGS
+                ddgs = DDGS()
+                raw = list(ddgs.text(query, max_results=min(count, 15)))
+                for item in raw:
+                    url = item.get("href", "")
+                    title = item.get("title", "")
+                    snippet = item.get("body", "")
+                    if not url or not url.startswith("http"):
+                        continue
+                    if _is_junk(url, title):
+                        continue
+                    if len(snippet) < 30 and len(title) < 20:
+                        continue
+                    results.append({"title": title, "content": snippet, "url": url})
+                    if len(results) >= count:
+                        break
+            except Exception:
+                pass
 
     return results
 

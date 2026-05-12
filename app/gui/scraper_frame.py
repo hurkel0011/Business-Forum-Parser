@@ -330,6 +330,7 @@ class ScraperFrame(ctk.CTkFrame):
 
             # Classify top candidates (limit to 40 to control API cost)
             to_classify = candidates[:40]
+            consecutive_low = 0  # Early stop if too many consecutive low scores
 
             for i, post in enumerate(to_classify):
                 self._ui(lambda: self.progress_bar.set(0.55 + (i / len(to_classify)) * 0.45))
@@ -350,14 +351,23 @@ class ScraperFrame(ctk.CTkFrame):
                             ))
                         else:
                             leads_added += 1
+                            consecutive_low = 0
                             sev = post.get("severity", "?").upper()
                             self._ui(lambda s=score, sv=sev, p=post: self._log(
                                 f"  ✓ score={s} [{sv}] {p['title'][:55]}"
                             ))
                     else:
+                        consecutive_low += 1
                         self._ui(lambda s=score, p=post: self._log(
                             f"  · skip score={s} | {p['title'][:55]}"
                         ))
+
+                    # Early stop: if last 10 posts all scored below threshold, stop
+                    if consecutive_low >= 10 and i >= 15:
+                        self._ui(lambda: self._log(
+                            f"  ⏹ Stopping early — last 10 posts all below threshold"
+                        ))
+                        break
                 except Exception as e:
                     self._ui(lambda e=e: self._log(f"  ✗ Error: {e}"))
 

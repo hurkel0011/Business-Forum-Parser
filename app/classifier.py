@@ -65,6 +65,14 @@ LOW-VALUE SIGNALS (score 1-3):
 - Status pages or outage reports for cloud services (not fixable by a dev)
 - Feature requests to the vendor (user wants vendor to fix, not a freelancer)
 
+IMPORTANT EDGE CASES — don't miss these:
+- If content is short but the TITLE describes a specific broken integration/tool, score 4+ (the title alone signals real pain)
+- QuickBooks/Xero/Shopify users complaining = small business owners with budgets, score 5+
+- "HORRIBLE", "NIGHTMARE", "worst update" from business users = score 5+ (they'll pay to fix it)
+- CI/CD pipeline failures (Bitbucket, GitHub Actions, Jenkins) = dev teams who pay for DevOps help, score 5+
+- Broken webhooks, API rate limits, sync failures = integration work, always score 5+
+- Posts from r/sysadmin, r/msp = IT professionals with company budgets, add +1 to score
+
 DIFFICULTY GUIDE:
 - quick_fix: Under 4 hours — config change, small script, CSS fix, simple bug
 - moderate: 4-20 hours — custom integration, plugin, data migration
