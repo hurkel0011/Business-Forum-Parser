@@ -250,21 +250,23 @@ class Database:
 
     def get_leads_by_software(self):
         """Group leads by software product."""
-        return self.conn.execute(
+        rows = self.conn.execute(
             "SELECT software_product, COUNT(*) as cnt, AVG(lead_score) as avg_score, "
             "AVG(fixability_score) as avg_fix "
             "FROM leads WHERE software_product != '' AND software_product IS NOT NULL "
             "GROUP BY software_product ORDER BY cnt DESC"
         ).fetchall()
+        return [dict(r) for r in rows]
 
     def get_leads_by_company(self):
         """Group leads by company."""
-        return self.conn.execute(
+        rows = self.conn.execute(
             "SELECT company_info, COUNT(*) as cnt, AVG(lead_score) as avg_score "
             "FROM leads WHERE company_info != '' AND company_info != 'unknown' "
             "AND company_info IS NOT NULL "
             "GROUP BY company_info ORDER BY cnt DESC"
         ).fetchall()
+        return [dict(r) for r in rows]
 
     def log_scrape_run(self, source, query, posts_found, leads_generated):
         self.conn.execute(
@@ -277,13 +279,14 @@ class Database:
 
     def get_scrape_history(self, limit=20):
         """Get recent scrape runs for performance tracking."""
-        return self.conn.execute(
+        rows = self.conn.execute(
             "SELECT * FROM scrape_runs ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
+        return [dict(r) for r in rows]
 
     def get_source_performance(self):
         """Get lead conversion rate by source — which sources produce the best leads."""
-        return self.conn.execute(
+        rows = self.conn.execute(
             """SELECT source, COUNT(*) as count,
                       AVG(lead_score) as avg_score,
                       SUM(CASE WHEN lead_score >= 5 THEN 1 ELSE 0 END) as high_value,
@@ -292,6 +295,7 @@ class Database:
                GROUP BY source
                ORDER BY avg_score DESC"""
         ).fetchall()
+        return [dict(r) for r in rows]
 
     def delete_lead(self, lead_id):
         self.conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
