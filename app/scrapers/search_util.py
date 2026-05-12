@@ -177,6 +177,20 @@ def _rate_limit():
         _last_search_time = time.time()
 
 
+def _ddg_with_timeout(query, max_results, timeout=30):
+    """Run DDG search with a timeout to prevent hangs."""
+    import concurrent.futures
+    from ddgs import DDGS
+
+    def _do_search():
+        ddgs = DDGS()
+        return list(ddgs.text(query, max_results=max_results))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(_do_search)
+        return future.result(timeout=timeout)
+
+
 def ddg_search(query, count=10):
     """Search DuckDuckGo and return filtered results.
 
@@ -190,9 +204,7 @@ def ddg_search(query, count=10):
     _rate_limit()
     results = []
     try:
-        from ddgs import DDGS
-        ddgs = DDGS()
-        raw = list(ddgs.text(query, max_results=min(count + 5, 30)))
+        raw = _ddg_with_timeout(query, max_results=min(count + 5, 30))
 
         for item in raw:
             url = item.get("href", "")
@@ -223,12 +235,10 @@ def ddg_search(query, count=10):
     except Exception as exc:
         log.debug("DDG search error for query '%s': %s", query[:50], exc)
         # Retry once after a longer delay
-        if "Ratelimit" in str(exc) or "429" in str(exc):
+        if "Ratelimit" in str(exc) or "429" in str(exc) or "TimeoutError" in type(exc).__name__:
             time.sleep(2 + random.uniform(0, 1))
             try:
-                from ddgs import DDGS
-                ddgs = DDGS()
-                raw = list(ddgs.text(query, max_results=min(count, 15)))
+                raw = _ddg_with_timeout(query, max_results=min(count, 15))
                 for item in raw:
                     url = item.get("href", "")
                     title = item.get("title", "")
