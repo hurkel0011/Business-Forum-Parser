@@ -615,7 +615,7 @@ class LeadsFrame(ctk.CTkFrame):
             writer.writerow([
                 "Score", "Severity", "Difficulty", "Est Hours", "Revenue",
                 "Title", "Source", "Category", "Software", "Fixability",
-                "Author", "URL", "Company", "Status", "Summary",
+                "Author", "URL", "Company", "Status", "Notes", "Summary",
                 "Solution Approach", "Content",
             ])
             for lead in leads:
@@ -626,7 +626,8 @@ class LeadsFrame(ctk.CTkFrame):
                     lead["title"], lead["source"], lead["category"],
                     lead.get("software_product", ""), lead["fixability_score"],
                     lead["author"], lead["url"], lead["company_info"],
-                    lead["status"], lead.get("summary", ""),
+                    lead["status"], lead.get("notes", "") or "",
+                    lead.get("summary", ""),
                     lead.get("solution_approach", ""),
                     (lead["content"] or "")[:500],
                 ])
