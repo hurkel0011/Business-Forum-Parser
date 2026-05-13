@@ -158,6 +158,35 @@ class ScraperFrame(ctk.CTkFrame):
     def _ui(self, func):
         self.after(0, func)
 
+    @staticmethod
+    def _normalize_url(url):
+        """Normalize URL for cross-scraper deduplication.
+
+        Handles common variants that scrapers may return for the same post:
+        - Reddit subdomains: www.reddit.com / old.reddit.com / np.reddit.com
+        - Trailing slashes
+        - URL fragments (#comment-123) and tracking query strings
+        - Mixed case in hostname
+        """
+        if not url:
+            return ""
+        url = url.strip().lower()
+        # Drop fragment and query string
+        for sep in ("#", "?"):
+            if sep in url:
+                url = url.split(sep, 1)[0]
+        # Drop trailing slash
+        url = url.rstrip("/")
+        # Normalize reddit subdomains to www.
+        for variant in ("old.reddit.com", "np.reddit.com",
+                        "i.reddit.com", "m.reddit.com"):
+            if variant in url:
+                url = url.replace(variant, "www.reddit.com")
+        # Normalize bare reddit.com → www.reddit.com
+        if "://reddit.com/" in url:
+            url = url.replace("://reddit.com/", "://www.reddit.com/")
+        return url
+
     def _save_source_toggle(self, key, var):
         """Persist a single toggle state to config so it survives restart."""
         try:
@@ -259,7 +288,7 @@ class ScraperFrame(ctk.CTkFrame):
             seen_titles = set()
             deduped = []
             for p in all_posts:
-                url_key = p.get("url", "").rstrip("/").lower()
+                url_key = self._normalize_url(p.get("url", ""))
                 # Normalize title: lowercase, strip source suffixes like " - Reddit"
                 title_raw = p.get("title", "").lower().strip()
                 for suffix in [" - reddit", " : r/", " | atlassian", " - hubspot",
@@ -350,6 +379,12 @@ class ScraperFrame(ctk.CTkFrame):
                 candidates.sort(key=lambda p: p.get("_prescore", 0), reverse=True)
 
             # ── PRE-CLASSIFY: Remove duplicates already in DB ─────
+            # Normalize URLs before storage and DB lookup so reddit subdomain
+            # variants (www. / old. / m.) don't create dupes across runs.
+            for p in candidates:
+                norm = self._normalize_url(p.get("url", ""))
+                if norm and norm != p.get("url"):
+                    p["url"] = norm
             before_dedup = len(candidates)
             candidates = [p for p in candidates if not self.db.url_exists(p.get("url", ""))]
             dupes_skipped = before_dedup - len(candidates)
