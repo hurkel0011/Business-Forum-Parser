@@ -2,20 +2,24 @@ from .base import BaseScraper
 from .search_util import multi_domain_search
 
 QUERIES = [
-    # Site-targeted: Reddit discussions
+    # Highest-value first — these were being dropped by the 8-query cap
+    # Email marketing platforms (small business, recurring pain)
     'site:reddit.com Mailchimp error OR broken OR "not working" OR deliverability help',
     'site:reddit.com ActiveCampaign error OR broken OR "not working" OR help',
     'site:reddit.com Klaviyo error OR broken OR "not working" OR integration help',
+    # Google Analytics / GA4 — universal pain, every business runs into it
+    'site:reddit.com "Google Analytics" OR GA4 broken OR error OR migration OR "not working"',
+    # Google Tag Manager — integration pain on top of GA
+    'site:reddit.com "Google Tag Manager" OR GTM error OR broken OR tracking',
+    # SEO tools — agencies with budgets
     'site:reddit.com SEMrush OR Ahrefs error OR broken OR "not working" help',
     'site:reddit.com Moz SEO error OR broken OR "not working" help',
-    # Site-targeted: more Reddit marketing queries
+    # Integration / automation variants (catch what the above miss)
+    'site:reddit.com Klaviyo integration OR sync OR "not working" error help',
+    # Demoted (lower priority — variants of above)
     'site:reddit.com Mailchimp automation OR deliverability OR sync error help',
     'site:reddit.com ActiveCampaign integration OR automation OR sync error help',
-    'site:reddit.com Klaviyo integration OR sync OR "not working" error help',
     'site:reddit.com Moz OR SEMrush SEO crawl OR audit OR rank error help',
-    # Google Analytics / Tag Manager — huge integration pain
-    'site:reddit.com "Google Analytics" OR GA4 broken OR error OR migration OR "not working"',
-    'site:reddit.com "Google Tag Manager" OR GTM error OR broken OR tracking',
 ]
 
 
