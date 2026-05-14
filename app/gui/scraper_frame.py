@@ -115,6 +115,8 @@ class ScraperFrame(ctk.CTkFrame):
             placeholder_text="e.g. 'CRM integration broken' — leave blank for wide search",
         )
         self.query_entry.grid(row=0, column=1, columnspan=3, padx=(0, 15), pady=8, sticky="ew")
+        # Enter in the query field starts the scrape (common UX expectation)
+        self.query_entry.bind("<Return>", lambda _: self._start_scrape())
 
         self.enrich_var = ctk.BooleanVar(value=True)
         ctk.CTkCheckBox(
