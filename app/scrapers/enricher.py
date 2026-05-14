@@ -131,7 +131,10 @@ def enrich_post(post):
     # For Reddit posts, try the JSON API first (more reliable than scraping)
     if "reddit.com" in url_lower and "/comments/" in url_lower:
         try:
-            json_url = url.rstrip("/") + ".json"
+            # Strip query string and fragment before appending .json
+            # otherwise URL becomes 'https://r.com/foo/?utm=x.json' (broken)
+            base_url = url.split("#", 1)[0].split("?", 1)[0]
+            json_url = base_url.rstrip("/") + ".json"
             resp = requests.get(
                 json_url, headers=_get_headers(), timeout=15,
                 allow_redirects=True,
