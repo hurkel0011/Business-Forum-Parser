@@ -141,14 +141,38 @@ def enrich_post(post):
             )
             if resp.status_code == 200:
                 data = resp.json()
-                if isinstance(data, list) and len(data) > 0:
-                    # First element is the post, second is comments
+                if isinstance(data, list) and len(data) >= 1:
+                    # First element is the post itself
                     post_data = data[0].get("data", {}).get("children", [{}])
+                    selftext = ""
                     if post_data:
                         selftext = post_data[0].get("data", {}).get("selftext", "")
-                        if len(selftext) > len(existing_content):
-                            post["content"] = selftext[:5000]
-                            return post
+
+                    # Second element (if present) is the comments tree.
+                    # Top comments often confirm the problem is widespread,
+                    # mention specific tools/workarounds, or contain OP
+                    # follow-ups — all valuable for lead scoring.
+                    comments_text = ""
+                    if len(data) >= 2:
+                        comments = data[1].get("data", {}).get("children", [])
+                        # Take top 5 root comments by score
+                        comment_pairs = []
+                        for c in comments[:10]:  # cap before sorting
+                            cd = c.get("data", {})
+                            body = cd.get("body", "")
+                            score = cd.get("score", 0)
+                            # Skip removed/deleted comments and bot replies
+                            if body and body not in ("[removed]", "[deleted]"):
+                                comment_pairs.append((score, body))
+                        comment_pairs.sort(key=lambda x: -x[0])
+                        comments_text = "\n\n--- Top comments ---\n" + "\n\n".join(
+                            f"[{s}] {b}" for s, b in comment_pairs[:5]
+                        ) if comment_pairs else ""
+
+                    combined = selftext + comments_text
+                    if len(combined) > len(existing_content):
+                        post["content"] = combined[:5000]
+                        return post
         except Exception:
             pass  # Fall through to HTML scraping
 
