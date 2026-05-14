@@ -79,6 +79,10 @@ class LeadsFrame(ctk.CTkFrame):
         ctk.CTkLabel(filter_frame, text="Min Score:").grid(row=1, column=4, padx=(10, 5), pady=5)
         self.score_filter = ctk.CTkEntry(filter_frame, width=50, placeholder_text="0")
         self.score_filter.grid(row=1, column=5, padx=5, pady=5, sticky="w")
+        # Apply filter on Enter — otherwise typing in this field would have
+        # no effect until the user touches another filter
+        self.score_filter.bind("<Return>", lambda _: self.refresh())
+        self.score_filter.bind("<FocusOut>", lambda _: self.refresh())
 
         ctk.CTkLabel(filter_frame, text="Sort by:").grid(row=1, column=6, padx=(10, 5), pady=5)
         self.sort_filter = ctk.CTkComboBox(
