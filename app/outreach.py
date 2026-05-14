@@ -209,7 +209,13 @@ class OutreachGenerator:
         """Generate a basic template if API fails."""
         title = lead.get("title", "your post")
         source = lead.get("source", "online")
+        is_reddit = "reddit" in str(source).lower()
         return {
+            "reddit_reply": (
+                f"Hey, saw your post about \"{title[:60]}\". I've worked on "
+                f"similar issues before — happy to chat about it if you want, "
+                f"feel free to DM."
+            ) if is_reddit else "",
             "linkedin_message": (
                 f"Hi there - I came across your post about \"{title[:60]}\" on {source}. "
                 f"I'm a developer who specializes in exactly this kind of issue. "
