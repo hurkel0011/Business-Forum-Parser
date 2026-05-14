@@ -286,15 +286,44 @@ class ScraperFrame(ctk.CTkFrame):
             self._ui(lambda n=len(all_posts): self._log(f"\n  Total scraped: {n} posts"))
 
             # Cross-scraper dedup by URL and fuzzy title
+            # Common title decorations that scrapers/search engines append —
+            # stripped before fuzzy matching so the same post titled
+            # 'Foo - Reddit' and 'Foo - r/sysadmin' becomes the same key.
+            _TITLE_SUFFIXES = [
+                " - reddit", " : r/", " on reddit",
+                " | atlassian", " - atlassian",
+                " - hubspot", " | hubspot", " - hubspot community",
+                " - stack overflow", " - stackoverflow",
+                " - github", " · github", " · issue", " - issue",
+                " - shopify community", " | shopify",
+                " - woocommerce", " | woocommerce",
+                " - wordpress", " | wordpress.org",
+                " - dev community", " - dev.to",
+                " - spiceworks", " - quora",
+                " - microsoft community", " | techcommunity",
+                " - airtable community", " - zapier community",
+                " - notion", " - clickup", " - asana",
+                " - trustpilot", " - g2.com", " - capterra",
+                " - apple developer", " - apple community",
+                " - bigcommerce community",
+            ]
+            # Common "[SOLVED]" / "[FIXED]" prefix variants — strip so we match
+            # the same post with and without the resolution tag
+            _TITLE_PREFIXES = ("[solved]", "[fixed]", "[resolved]", "[help]",
+                               "solved:", "fixed:", "resolved:", "help:")
             seen_urls = set()
             seen_titles = set()
             deduped = []
             for p in all_posts:
                 url_key = self._normalize_url(p.get("url", ""))
-                # Normalize title: lowercase, strip source suffixes like " - Reddit"
                 title_raw = p.get("title", "").lower().strip()
-                for suffix in [" - reddit", " : r/", " | atlassian", " - hubspot",
-                               " - stack overflow", " - github"]:
+                # Strip status prefixes
+                for prefix in _TITLE_PREFIXES:
+                    if title_raw.startswith(prefix):
+                        title_raw = title_raw[len(prefix):].strip()
+                        break
+                # Strip source suffixes
+                for suffix in _TITLE_SUFFIXES:
                     if suffix in title_raw:
                         title_raw = title_raw[:title_raw.index(suffix)]
                 title_key = title_raw[:50]
