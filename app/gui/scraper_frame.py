@@ -416,7 +416,11 @@ class ScraperFrame(ctk.CTkFrame):
             consecutive_low = 0  # Early stop if too many consecutive low scores
 
             for i, post in enumerate(to_classify):
-                self._ui(lambda: self.progress_bar.set(0.55 + (i / len(to_classify)) * 0.45))
+                # Capture i and len by value, not reference — otherwise the
+                # after() callback fires with whatever i happens to be when
+                # tkinter runs it (probably the loop's final value)
+                self._ui(lambda i=i, t=len(to_classify):
+                    self.progress_bar.set(0.55 + (i / t) * 0.45))
                 self._ui(lambda i=i, t=len(to_classify): self.status_label.configure(
                     text=f"Classifying {i + 1}/{t}..."
                 ))
