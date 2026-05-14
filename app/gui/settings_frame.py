@@ -74,7 +74,7 @@ class SettingsFrame(ctk.CTkFrame):
         self.keywords_entry.grid(row=1, column=1, padx=(0, 15), pady=5, sticky="ew")
         self.keywords_entry.bind("<Return>", lambda _: self._save())
 
-        ctk.CTkLabel(scraper_frame, text="Min Lead Score (1-10):").grid(
+        ctk.CTkLabel(scraper_frame, text="Min Lead Score (0-10):").grid(
             row=2, column=0, padx=15, pady=5, sticky="w"
         )
         self.min_score_entry = ctk.CTkEntry(scraper_frame, width=60)
@@ -146,16 +146,17 @@ class SettingsFrame(ctk.CTkFrame):
         kws = [k.strip() for k in self.keywords_entry.get().split(",") if k.strip()]
         self.config.set("keywords", kws)
 
-        # Validate min_score: must be a number between 1 and 10
+        # Validate min_score: must be a number between 0 and 10
+        # (0 means save every classified lead — useful for debugging)
         raw_score = self.min_score_entry.get().strip()
         score_warning = ""
         if raw_score:
             try:
                 score = float(raw_score)
-                if 1.0 <= score <= 10.0:
+                if 0.0 <= score <= 10.0:
                     self.config.set("min_lead_score", score)
                 else:
-                    score_warning = f"Min score must be 1-10 (got {score}). Kept previous value."
+                    score_warning = f"Min score must be 0-10 (got {score}). Kept previous value."
             except ValueError:
                 score_warning = f"Min score must be a number (got '{raw_score}'). Kept previous value."
 
