@@ -187,14 +187,21 @@ class Database:
         return [dict(r) for r in rows]
 
     def update_lead_status(self, lead_id, status, notes=None):
-        if notes:
+        """Update a lead's status, optionally setting notes.
+
+        notes semantics:
+        - None (default): leave the notes column untouched
+        - "" (empty string): clear the notes column
+        - "text": set notes to text
+        """
+        if notes is None:
             self.conn.execute(
-                "UPDATE leads SET status = ?, notes = ? WHERE id = ?",
-                (status, notes, lead_id),
+                "UPDATE leads SET status = ? WHERE id = ?", (status, lead_id)
             )
         else:
             self.conn.execute(
-                "UPDATE leads SET status = ? WHERE id = ?", (status, lead_id)
+                "UPDATE leads SET status = ?, notes = ? WHERE id = ?",
+                (status, notes, lead_id),
             )
         self.conn.commit()
 

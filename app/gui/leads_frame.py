@@ -367,7 +367,9 @@ class LeadsFrame(ctk.CTkFrame):
         lead_id = self._current_lead["id"]
         status = self.status_editor.get()
         notes = self.notes_editor.get("1.0", "end").strip()
-        self.db.update_lead_status(lead_id, status, notes=notes or None)
+        # Pass empty string (not None) so the DB actually clears notes when
+        # the user wipes the textbox — None means "don't touch the column"
+        self.db.update_lead_status(lead_id, status, notes=notes)
         # Update local cache so subsequent refresh doesn't lose state
         self._current_lead["status"] = status
         self._current_lead["notes"] = notes
