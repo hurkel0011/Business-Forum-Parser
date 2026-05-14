@@ -15,6 +15,11 @@ class Database:
 
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        # WAL mode allows the GUI thread to query (e.g. refresh leads list)
+        # while the background scrape thread is writing. Default 'delete'
+        # mode would serialize all access and could cause UI hitches.
+        self.conn.execute("PRAGMA journal_mode = WAL")
+        self.conn.execute("PRAGMA synchronous = NORMAL")  # safe + fast in WAL
         self._create_tables()
 
     def _create_tables(self):
