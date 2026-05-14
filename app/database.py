@@ -107,8 +107,9 @@ class Database:
                (source, title, url, author, content, severity,
                 fixability_score, category, lead_score, company_info,
                 difficulty, estimated_hours, software_product,
-                revenue_potential, summary, solution_approach)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                revenue_potential, summary, solution_approach,
+                status, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 lead_data.get("source", ""),
                 lead_data.get("title", ""),
@@ -126,6 +127,8 @@ class Database:
                 lead_data.get("revenue_potential", "unknown"),
                 lead_data.get("summary", ""),
                 lead_data.get("solution_approach", ""),
+                lead_data.get("status", "new"),
+                lead_data.get("notes", None),
             ),
         )
         self.conn.commit()
