@@ -291,7 +291,11 @@ class Database:
             """INSERT INTO scrape_runs
                (source, query, posts_found, leads_generated, completed_at)
                VALUES (?, ?, ?, ?, ?)""",
-            (source, query, posts_found, leads_generated, datetime.now().isoformat()),
+            # Use UTC to match the leads table's CURRENT_TIMESTAMP (also UTC).
+            # Mixing local time here and UTC there caused inconsistent times
+            # between the two tables.
+            (source, query, posts_found, leads_generated,
+             datetime.utcnow().isoformat(sep=" ", timespec="seconds")),
         )
         self.conn.commit()
 
