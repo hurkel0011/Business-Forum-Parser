@@ -115,18 +115,23 @@ class SettingsFrame(ctk.CTkFrame):
         self._load_values()
 
     def _load_values(self):
+        # Clear before insert so this method is safe to call repeatedly
+        # (otherwise repeat calls would concatenate values to existing text)
         fields = [
             (self.anthropic_key, "anthropic_api_key"),
             (self.github_token, "github_token"),
         ]
         for entry, key in fields:
+            entry.delete(0, "end")
             val = self.config.get(key, "")
             if val:
                 entry.insert(0, val)
 
+        self.keywords_entry.delete(0, "end")
         kws = self.config.get("keywords", [])
         self.keywords_entry.insert(0, ", ".join(kws))
 
+        self.min_score_entry.delete(0, "end")
         ms = self.config.get("min_lead_score", 5.0)
         self.min_score_entry.insert(0, str(ms))
 
