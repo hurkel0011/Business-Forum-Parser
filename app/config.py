@@ -56,8 +56,19 @@ class Config:
         merged = DEFAULT_CONFIG.copy()
 
         if os.path.exists(CONFIG_FILE):
-            with open(CONFIG_FILE, "r") as f:
-                merged.update(json.load(f))
+            try:
+                with open(CONFIG_FILE, "r") as f:
+                    merged.update(json.load(f))
+            except (json.JSONDecodeError, OSError) as e:
+                # Corrupted config — back it up and start fresh with defaults
+                # rather than crashing the whole app at startup
+                try:
+                    backup = CONFIG_FILE + ".corrupt"
+                    os.replace(CONFIG_FILE, backup)
+                    print(f"[config] {CONFIG_FILE} was corrupt ({e}); "
+                          f"saved as {backup}, using defaults")
+                except OSError:
+                    pass  # If we can't back up, just continue with defaults
 
         for env_var, config_key in ENV_KEY_MAP.items():
             val = os.environ.get(env_var, "")
@@ -72,8 +83,21 @@ class Config:
         return merged
 
     def save(self):
-        with open(CONFIG_FILE, "w") as f:
-            json.dump(self.data, f, indent=2)
+        # Atomic write: write to a temp file, then rename. Prevents the
+        # config from being corrupted if the process is killed mid-write.
+        tmp_path = CONFIG_FILE + ".tmp"
+        try:
+            with open(tmp_path, "w") as f:
+                json.dump(self.data, f, indent=2)
+            os.replace(tmp_path, CONFIG_FILE)  # atomic on POSIX & Windows
+        except OSError:
+            # Best-effort cleanup; if rename failed, the temp file may exist
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
 
         if ENV_FILE.exists():
             for config_key, env_var in CONFIG_TO_ENV.items():
