@@ -13,7 +13,8 @@ class LeadsFrame(ctk.CTkFrame):
         self.config = config
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(3, weight=1)
+        # Row 4 = leads_scroll, the row that should expand to fill height
+        self.grid_rowconfigure(4, weight=1)
 
         # Header row
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -32,9 +33,27 @@ class LeadsFrame(ctk.CTkFrame):
             header_frame, text="Refresh", width=80, command=self.refresh
         ).grid(row=0, column=2, padx=5)
 
-        # Filters — row 1
+        # Search box — full-text search across title/content/summary
+        search_frame = ctk.CTkFrame(self)
+        search_frame.grid(row=1, column=0, padx=20, pady=(5, 0), sticky="ew")
+        search_frame.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(search_frame, text="Search:").grid(row=0, column=0, padx=(15, 5), pady=8)
+        self.search_entry = ctk.CTkEntry(
+            search_frame, placeholder_text="Search title, content, or summary",
+        )
+        self.search_entry.grid(row=0, column=1, padx=(0, 5), pady=8, sticky="ew")
+        self.search_entry.bind("<Return>", lambda _: self.refresh())
+        self.search_entry.bind("<FocusOut>", lambda _: self.refresh())
+
+        ctk.CTkButton(
+            search_frame, text="Clear", width=60,
+            command=self._clear_search,
+        ).grid(row=0, column=2, padx=(0, 15), pady=8)
+
+        # Filters — row 2
         filter_frame = ctk.CTkFrame(self)
-        filter_frame.grid(row=1, column=0, padx=20, pady=5, sticky="ew")
+        filter_frame.grid(row=2, column=0, padx=20, pady=5, sticky="ew")
 
         ctk.CTkLabel(filter_frame, text="Source:").grid(row=0, column=0, padx=(15, 5), pady=5)
         self.source_filter = ctk.CTkComboBox(
@@ -95,7 +114,7 @@ class LeadsFrame(ctk.CTkFrame):
 
         # Column headers
         header_row = ctk.CTkFrame(self)
-        header_row.grid(row=2, column=0, padx=20, pady=(10, 0), sticky="ew")
+        header_row.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="ew")
         header_row.grid_columnconfigure(3, weight=1)
 
         cols = [
@@ -118,12 +137,12 @@ class LeadsFrame(ctk.CTkFrame):
 
         # Leads list
         self.leads_scroll = ctk.CTkScrollableFrame(self)
-        self.leads_scroll.grid(row=3, column=0, padx=20, pady=5, sticky="nsew")
+        self.leads_scroll.grid(row=4, column=0, padx=20, pady=5, sticky="nsew")
         self.leads_scroll.grid_columnconfigure(2, weight=1)
 
         # Detail panel
         self.detail_frame = ctk.CTkFrame(self)
-        self.detail_frame.grid(row=4, column=0, padx=20, pady=10, sticky="ew")
+        self.detail_frame.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
         self.detail_frame.grid_columnconfigure(0, weight=1)
 
         self.detail_label = ctk.CTkLabel(
@@ -195,6 +214,10 @@ class LeadsFrame(ctk.CTkFrame):
         self._current_url = None
         self._current_lead = None
 
+    def _clear_search(self):
+        self.search_entry.delete(0, "end")
+        self.refresh()
+
     def _build_filters(self):
         filters = {}
         source = self.source_filter.get()
@@ -236,6 +259,19 @@ class LeadsFrame(ctk.CTkFrame):
 
     def refresh(self):
         leads = self.db.get_leads(self._build_filters())
+
+        # Client-side search across title + content + summary + notes
+        # Done in Python instead of SQL so we can search multiple fields
+        # at once without complicating the get_leads filter API
+        search_query = self.search_entry.get().strip().lower()
+        if search_query:
+            def _matches(lead):
+                for field in ("title", "content", "summary", "solution_approach", "notes"):
+                    val = lead.get(field) or ""
+                    if search_query in val.lower():
+                        return True
+                return False
+            leads = [l for l in leads if _matches(l)]
 
         all_leads = self.db.get_leads()
         sources = sorted(set(l["source"] for l in all_leads if l["source"]))
@@ -609,14 +645,32 @@ class LeadsFrame(ctk.CTkFrame):
         self.clipboard_append(content)
 
     def _export_csv(self):
-        leads = self.db.get_leads()
+        # Export respects the active filters AND the search box so users
+        # can export just 'new' leads, or only leads matching a keyword,
+        # etc. Previously this always dumped all leads regardless of UI state.
+        leads = self.db.get_leads(self._build_filters())
+        search_query = self.search_entry.get().strip().lower()
+        if search_query:
+            def _matches(lead):
+                for field in ("title", "content", "summary", "solution_approach", "notes"):
+                    val = lead.get(field) or ""
+                    if search_query in val.lower():
+                        return True
+                return False
+            leads = [l for l in leads if _matches(l)]
+
         if not leads:
             return
+
+        # Smart default name reflecting filters in play
+        default_name = "leads_export.csv"
+        if search_query or any(k != "sort" for k in (self._build_filters() or {})):
+            default_name = "leads_export_filtered.csv"
 
         filepath = filedialog.asksaveasfilename(
             defaultextension=".csv",
             filetypes=[("CSV files", "*.csv")],
-            initialfile="leads_export.csv",
+            initialfile=default_name,
         )
         if not filepath:
             return
