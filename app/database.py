@@ -1,13 +1,23 @@
+"""SQLite persistence layer for leads and scrape-run history.
+
+The database has two tables:
+  leads: one row per discovered lead with classification metadata
+  scrape_runs: log of pipeline runs (timestamps, post/lead counts)
+
+The connection is shared across threads via check_same_thread=False
+plus WAL journal mode so the GUI can read while the scrape writes.
+"""
 import sqlite3
 import os
 from datetime import datetime
+from typing import Optional, Any
 
 # Ownership watermark — embedded in every database instance
 _ORIGIN = "BonnieTheDog420"
 
 
 class Database:
-    def __init__(self, db_path=None):
+    def __init__(self, db_path: Optional[str] = None) -> None:
         if db_path is None:
             db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
             os.makedirs(db_dir, exist_ok=True)
@@ -92,7 +102,7 @@ class Database:
             if col_name not in existing:
                 self.conn.execute(f"ALTER TABLE leads ADD COLUMN {col_name} {col_def}")
 
-    def url_exists(self, url):
+    def url_exists(self, url: str) -> bool:
         """Check if a lead with this URL already exists."""
         if not url:
             return False
@@ -101,7 +111,7 @@ class Database:
         ).fetchone()
         return row is not None
 
-    def add_lead(self, lead_data):
+    def add_lead(self, lead_data: dict) -> Optional[int]:
         # Skip duplicates by URL
         url = lead_data.get("url", "")
         if url and self.url_exists(url):
@@ -139,7 +149,7 @@ class Database:
         self.conn.commit()
         return cursor.lastrowid
 
-    def get_leads(self, filters=None):
+    def get_leads(self, filters: Optional[dict] = None) -> list[dict]:
         query = "SELECT * FROM leads"
         params = []
         conditions = []
@@ -191,7 +201,12 @@ class Database:
         rows = self.conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
 
-    def update_lead_status(self, lead_id, status, notes=None):
+    def update_lead_status(
+        self,
+        lead_id: int,
+        status: str,
+        notes: Optional[str] = None,
+    ) -> None:
         """Update a lead's status, optionally setting notes.
 
         notes semantics:
@@ -210,7 +225,7 @@ class Database:
             )
         self.conn.commit()
 
-    def get_stats(self):
+    def get_stats(self) -> dict[str, Any]:
         stats = {}
         stats["total"] = self.conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0]
         stats["by_severity"] = dict(
@@ -266,7 +281,7 @@ class Database:
         ).fetchone()[0]
         return stats
 
-    def get_leads_by_software(self):
+    def get_leads_by_software(self) -> list[dict]:
         """Group leads by software product."""
         rows = self.conn.execute(
             "SELECT software_product, COUNT(*) as cnt, AVG(lead_score) as avg_score, "
@@ -276,7 +291,7 @@ class Database:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_leads_by_company(self):
+    def get_leads_by_company(self) -> list[dict]:
         """Group leads by company."""
         rows = self.conn.execute(
             "SELECT company_info, COUNT(*) as cnt, AVG(lead_score) as avg_score "
@@ -286,7 +301,13 @@ class Database:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def log_scrape_run(self, source, query, posts_found, leads_generated):
+    def log_scrape_run(
+        self,
+        source: str,
+        query: str,
+        posts_found: int,
+        leads_generated: int,
+    ) -> None:
         self.conn.execute(
             """INSERT INTO scrape_runs
                (source, query, posts_found, leads_generated, completed_at)
@@ -299,14 +320,14 @@ class Database:
         )
         self.conn.commit()
 
-    def get_scrape_history(self, limit=20):
+    def get_scrape_history(self, limit: int = 20) -> list[dict]:
         """Get recent scrape runs for performance tracking."""
         rows = self.conn.execute(
             "SELECT * FROM scrape_runs ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_source_performance(self):
+    def get_source_performance(self) -> list[dict]:
         """Get lead conversion rate by source — which sources produce the best leads."""
         rows = self.conn.execute(
             """SELECT source, COUNT(*) as count,
@@ -319,9 +340,9 @@ class Database:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def delete_lead(self, lead_id):
+    def delete_lead(self, lead_id: int) -> None:
         self.conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
         self.conn.commit()
 
-    def close(self):
+    def close(self) -> None:
         self.conn.close()

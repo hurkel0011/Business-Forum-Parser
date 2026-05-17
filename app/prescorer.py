@@ -218,7 +218,7 @@ NEGATIVE_SIGNALS = {
 }
 
 
-def prescore(post):
+def prescore(post: dict) -> float:
     """Score a post locally using keyword matching. Returns 0-10."""
     text = f"{post.get('title', '')} {post.get('content', '')}".lower()
 
@@ -336,7 +336,7 @@ def prescore(post):
     return normalized
 
 
-def batch_prescore(posts, min_score=1.5):
+def batch_prescore(posts: list[dict], min_score: float = 1.5) -> list[dict]:
     """Pre-score and filter a list of posts. Returns sorted by score."""
     for post in posts:
         prescore(post)

@@ -1,6 +1,13 @@
+"""User configuration persistence (API keys, scraper toggles, thresholds).
+
+Stored as JSON at ~/.forum_parser/config.json plus an optional .env
+file in the project root for the API key (so it can be loaded by other
+tools too).
+"""
 import json
 import os
 from pathlib import Path
+from typing import Any, Optional
 
 from dotenv import load_dotenv, set_key
 
@@ -47,12 +54,12 @@ NUMERIC_KEYS = {"min_lead_score", "max_results_per_source"}
 
 
 class Config:
-    def __init__(self):
+    def __init__(self) -> None:
         os.makedirs(CONFIG_DIR, exist_ok=True)
         load_dotenv(ENV_FILE)
-        self.data = self._load()
+        self.data: dict[str, Any] = self._load()
 
-    def _load(self):
+    def _load(self) -> dict[str, Any]:
         merged = DEFAULT_CONFIG.copy()
 
         if os.path.exists(CONFIG_FILE):
@@ -82,7 +89,7 @@ class Config:
 
         return merged
 
-    def save(self):
+    def save(self) -> None:
         # Atomic write: write to a temp file, then rename. Prevents the
         # config from being corrupted if the process is killed mid-write.
         tmp_path = CONFIG_FILE + ".tmp"
@@ -105,9 +112,9 @@ class Config:
                 if val is not None:
                     set_key(str(ENV_FILE), env_var, str(val))
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
         return self.data.get(key, default)
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any) -> None:
         self.data[key] = value
         self.save()
