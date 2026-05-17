@@ -77,7 +77,47 @@ PAIN_SIGNALS = {
     "error 522": 5, "error 404": 3, "timeout": 4,
     "stack trace": 4, "exception": 3, "traceback": 4,
     "segfault": 5, "null pointer": 4, "memory leak": 5,
-    "crash report": 5,
+    "crash report": 5, "5xx error": 4, "401 unauthorized": 4,
+    "403 forbidden": 4, "429 too many": 5, "504 gateway": 5,
+
+    # Deadline / time-bound pressure (urgent business cycle)
+    "month-end": 6, "month end": 6, "quarter-end": 7, "quarter end": 7,
+    "year-end": 7, "year end": 7, "tax season": 6, "tax deadline": 7,
+    "before launch": 6, "before deadline": 7, "going live": 5,
+    "by friday": 5, "by next week": 5, "by monday": 4,
+
+    # Vendor failure (gold — official support failed, freelancer is plan B)
+    "vendor won't help": 8, "support won't help": 8,
+    "no documentation": 5, "documentation is wrong": 6,
+    "support ticket ignored": 7, "support is useless": 6,
+    "vendor dropped": 6, "abandoned by vendor": 7,
+    "no response from support": 7, "support said": 4,
+    "can't reach support": 6, "support told us": 5,
+
+    # Recurring / persistent pain (problem has been there a while)
+    "broken since": 6, "hasn't worked in": 6, "broken for weeks": 7,
+    "broken for months": 8, "ongoing issue": 5,
+    "every time we": 4, "happens every": 4,
+    "still happening": 5, "still not fixed": 6,
+
+    # Decision-maker signals (people with spending authority)
+    "as a cfo": 5, "as a coo": 5, "as a cto": 5,
+    "vp of engineering": 5, "vp of operations": 5,
+    "agency owner": 5, "business owner": 5,
+    "our team needs": 5, "our company": 3,
+    "our clients are": 5, "our customers are": 5,
+
+    # Vendor lock-in pain (migration projects)
+    "locked in": 5, "vendor lock": 5, "can't migrate": 6,
+    "trapped on": 5, "stuck on legacy": 6,
+    "can't get our data out": 8, "export blocked": 7,
+    "no export option": 6,
+
+    # Specific business workflows (high-value verticals)
+    "invoice processing": 5, "order processing": 5,
+    "inventory sync": 6, "payment reconciliation": 6,
+    "lead routing": 4, "customer onboarding": 4,
+    "billing automation": 5, "subscription management": 5,
 }
 
 BUSINESS_INDICATORS = {
@@ -148,6 +188,33 @@ NEGATIVE_SIGNALS = {
     # News / journalism
     "according to": -2, "report says": -3, "study finds": -3,
     "researchers": -3, "experts say": -3,
+
+    # Non-commercial (no budget = no lead)
+    "personal project": -5, "hobby project": -5,
+    "side project": -3, "for fun": -5, "just for fun": -6,
+    "learning python": -5, "learning javascript": -5,
+    "learning to code": -6, "i'm a student": -5,
+    "school project": -6, "homework": -7, "class project": -6,
+    "thesis": -4, "dissertation": -4, "research paper": -4,
+    "kaggle": -3, "leetcode": -4, "hackerrank": -4,
+
+    # Free-only seekers (won't pay anything)
+    "free alternative": -4, "open source alternative": -3,
+    "free version": -2, "totally free": -4,
+    "without spending money": -5, "no budget": -7,
+    "broke college student": -7, "tight budget": -3,
+
+    # Wishful thinking / no urgency
+    "would be nice": -3, "wish there was": -3,
+    "in the future": -2, "someday": -3, "eventually": -3,
+    "just curious": -4, "just wondering": -4,
+    "what would you do if": -4, "hypothetically": -5,
+    "thoughts on": -3, "anyone use": -2,
+
+    # Bot / automated / spam patterns
+    "subscribe to my": -7, "check out my": -5,
+    "promo code": -6, "discount code": -5,
+    "affiliate link": -7, "ref link": -5,
 }
 
 
