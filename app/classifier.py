@@ -81,6 +81,26 @@ AUTHORITY SIGNALS (people with spending power):
 - IT admins, agency owners, business owners describing pain
 - "Our team", "our company", "our clients" — they have budgets
 - CTOs/CIOs frustrated with vendor support
+- "As a CFO/COO/VP of X" — decision-maker self-identifying
+
+VENDOR-FAILURE SIGNALS (highest-value class — official support gave up):
+- "vendor won't help", "support ticket ignored", "no response from support"
+- "support said it's not their problem", "third-party issue"
+- "no documentation", "documentation is wrong/outdated"
+- "vendor dropped feature", "deprecated and we can't migrate"
+- When official support failed, freelancers are plan B — score 7+
+
+DEADLINE / URGENCY SIGNALS:
+- "tax season", "year-end close", "quarter-end deadline"
+- "before launch", "going live next week", "by Friday/Monday"
+- "investor demo next week", "audit next month"
+- These convert at 2-3x normal rates — score 7+ if combined with real pain
+
+PERSISTENCE SIGNALS (recurring revenue indicators):
+- "broken since [date/version]" — problem has been there a while
+- "happens every [day/week/month]" — recurring not one-off
+- "we've been dealing with this for [N] months" — desperate by now
+- "third time this year" — pattern of failures, more lock-in
 
 ═══════════════════════════════════════════════════════════
 LOW-VALUE SIGNALS (score 1-3)
@@ -108,6 +128,18 @@ WRONG AUDIENCE:
 - Feature requests to vendor (user wants VENDOR to fix, not freelancer)
 - Status page reports of cloud service outages (not freelance-fixable)
 - General programming questions with no business context
+
+NON-COMMERCIAL (no budget = no lead — score 1-2):
+- "Personal project", "hobby project", "for fun"
+- "I'm learning [X]", "school project", "homework", "thesis"
+- "Free alternative", "totally free", "broke college student"
+- Kaggle, LeetCode, HackerRank, code challenges
+
+WISHFUL THINKING / NO URGENCY (score 2-3):
+- "Would be nice", "wish there was", "in the future", "someday"
+- "Just curious", "just wondering", "hypothetically"
+- "Thoughts on X?", "anyone use [X]?" — no specific problem
+- Speculative future planning without active pain
 
 ═══════════════════════════════════════════════════════════
 SPECIFIC SOFTWARE PRODUCT CONTEXT
