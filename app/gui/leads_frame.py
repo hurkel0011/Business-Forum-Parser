@@ -40,7 +40,8 @@ class LeadsFrame(ctk.CTkFrame):
 
         ctk.CTkLabel(search_frame, text="Search:").grid(row=0, column=0, padx=(15, 5), pady=8)
         self.search_entry = ctk.CTkEntry(
-            search_frame, placeholder_text="Search title, content, or summary",
+            search_frame,
+            placeholder_text="Search across title, content, summary, solution, and notes",
         )
         self.search_entry.grid(row=0, column=1, padx=(0, 5), pady=8, sticky="ew")
         self.search_entry.bind("<Return>", lambda _: self.refresh())
