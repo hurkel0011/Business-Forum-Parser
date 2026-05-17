@@ -1,5 +1,9 @@
+import logging
+
 import requests
 from .base import BaseScraper
+
+log = logging.getLogger(__name__)
 
 
 class GitHubScraper(BaseScraper):
@@ -65,7 +69,8 @@ class GitHubScraper(BaseScraper):
                         "url": item.get("html_url", ""),
                         "author": item.get("user", {}).get("login", "unknown"),
                     })
-            except Exception:
+            except Exception as e:
+                log.debug("github query failed: %s: %s", search_query[:60], e)
                 continue
 
         # Deduplicate by URL

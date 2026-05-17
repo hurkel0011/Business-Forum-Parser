@@ -1,5 +1,9 @@
+import logging
+
 import requests
 from .base import BaseScraper
+
+log = logging.getLogger(__name__)
 
 HEADERS = {
     "User-Agent": (
@@ -87,7 +91,8 @@ class DevToScraper(BaseScraper):
                         "author": article.get("user", {}).get("username", "unknown"),
                     })
 
-            except Exception:
+            except Exception as e:
+                log.debug("dev.to query failed: %s", e)
                 continue
 
         # Also search by tags that indicate problems
@@ -118,7 +123,8 @@ class DevToScraper(BaseScraper):
                         "author": article.get("user", {}).get("username", "unknown"),
                     })
 
-            except Exception:
+            except Exception as e:
+                log.debug("dev.to query failed: %s", e)
                 continue
 
         return posts[:limit]

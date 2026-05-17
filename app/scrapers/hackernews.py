@@ -1,5 +1,9 @@
+import logging
+
 import requests
 from .base import BaseScraper
+
+log = logging.getLogger(__name__)
 
 
 class HackerNewsScraper(BaseScraper):
@@ -96,7 +100,8 @@ class HackerNewsScraper(BaseScraper):
                             ),
                             "author": hit.get("author", "unknown"),
                         })
-                except Exception:
+                except Exception as e:
+                    log.debug("HN query failed: %s/%s: %s", q[:40], tag_set, e)
                     continue
 
         # Deduplicate
