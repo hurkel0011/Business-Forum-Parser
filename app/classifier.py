@@ -427,7 +427,7 @@ class LeadClassifier:
                     try:
                         result = json.loads(json_text)
                         self._errors = 0
-                        return result
+                        return self._normalize_result(result)
                     except json.JSONDecodeError:
                         # Try to fix common issues: trailing commas, extra data
                         # Find the matching closing brace for the first opening brace
@@ -441,7 +441,7 @@ class LeadClassifier:
                                     try:
                                         result = json.loads(json_text[:idx + 1])
                                         self._errors = 0
-                                        return result
+                                        return self._normalize_result(result)
                                     except json.JSONDecodeError:
                                         break
                         pass  # fall through to retry
@@ -493,6 +493,63 @@ class LeadClassifier:
             "total_input_tokens": self._total_input_tokens,
             "cached_input_tokens": self._cached_input_tokens,
         }
+
+    # Allowed enum values — used to coerce LLM output back into expected ranges
+    _VALID_SEVERITY = {"critical", "high", "medium", "low"}
+    _VALID_CATEGORY = {"bug", "integration", "automation", "data", "security",
+                       "performance", "ux", "migration", "workflow", "other"}
+    _VALID_DIFFICULTY = {"quick_fix", "moderate", "complex", "major_project"}
+    _VALID_REVENUE = {"low", "medium", "high", "premium"}
+
+    def _normalize_result(self, result):
+        """Coerce LLM output into expected types/ranges.
+
+        The model occasionally returns lead_score as a string ("8" instead
+        of 8), unknown severity values, or missing fields. This normalizer
+        makes the output safe for downstream consumers (DB writes, score
+        comparisons) without losing the data when it's reasonable.
+        """
+        if not isinstance(result, dict):
+            return self._fallback("Result not a dict")
+
+        normalized = {}
+
+        # Numeric fields — coerce to int, clamp to expected range
+        for field, default, low, high in [
+            ("lead_score", 0, 0, 10),
+            ("fixability_score", 0, 0, 10),
+            ("estimated_hours", 0, 0, 500),
+        ]:
+            val = result.get(field, default)
+            try:
+                val = int(float(val))  # handle "8" and 8.0 both
+            except (ValueError, TypeError):
+                val = default
+            normalized[field] = max(low, min(high, val))
+
+        # Enum fields — fall back to "unknown" if value not in allowed set
+        for field, valid_set, default in [
+            ("severity", self._VALID_SEVERITY, "unknown"),
+            ("category", self._VALID_CATEGORY, "other"),
+            ("difficulty", self._VALID_DIFFICULTY, "unknown"),
+            ("revenue_potential", self._VALID_REVENUE, "unknown"),
+        ]:
+            val = str(result.get(field, default)).lower().strip()
+            normalized[field] = val if val in valid_set else default
+
+        # String fields — coerce to str, strip, cap length
+        for field, max_len in [
+            ("company_info", 200),
+            ("software_product", 200),
+            ("summary", 500),
+            ("solution_approach", 500),
+        ]:
+            val = result.get(field, "")
+            if val is None:
+                val = ""
+            normalized[field] = str(val).strip()[:max_len]
+
+        return normalized
 
     def _fallback(self, reason):
         return {
