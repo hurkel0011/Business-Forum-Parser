@@ -34,11 +34,33 @@ def _setup_logging():
 
 def main():
     _setup_logging()
-    config = Config()
-    db = Database()
-    app = MainWindow(db, config)
-    app.mainloop()
-    db.close()
+    log = logging.getLogger(__name__)
+
+    try:
+        config = Config()
+    except Exception:
+        log.exception("Fatal: could not load config")
+        raise
+
+    db = None
+    try:
+        db = Database()
+        app = MainWindow(db, config)
+        app.mainloop()
+    except Exception:
+        # Log the full traceback before exiting so the user (or LLM
+        # debugging this later) has something to go on.
+        log.exception("Fatal error in main window")
+        raise
+    finally:
+        # Always close the DB — even if mainloop raised, even if window
+        # init failed. WAL mode + atomic commits make sudden shutdown
+        # safe but explicit close is still the polite thing.
+        if db is not None:
+            try:
+                db.close()
+            except Exception:
+                log.exception("Error closing database")
 
 
 if __name__ == "__main__":
