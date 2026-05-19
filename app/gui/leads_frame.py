@@ -280,25 +280,40 @@ class LeadsFrame(ctk.CTkFrame):
         if search_query:
             leads = [l for l in leads if search_lead_text(l, search_query)]
 
-        all_leads = self.db.get_leads()
-        sources = sorted(set(l["source"] for l in all_leads if l["source"]))
-        self.source_filter.configure(values=["All"] + sources)
-
-        # Populate software and company filters
-        softwares = sorted(set(
-            l["software_product"] for l in all_leads
-            if "software_product" in l.keys() and l["software_product"]
-        ))
-        self.software_filter.configure(values=["All"] + softwares)
-
-        companies = sorted(set(
-            l["company_info"] for l in all_leads
-            if l["company_info"] and l["company_info"] != "unknown"
-        ))
-        self.company_filter.configure(values=["All"] + companies)
+        # Populate filter dropdowns using indexed DISTINCT queries
+        # instead of pulling every lead and deduping in Python.
+        # At 1000+ leads this is dramatically faster.
+        self.source_filter.configure(
+            values=["All"] + self.db.get_distinct_values("source")
+        )
+        self.software_filter.configure(
+            values=["All"] + self.db.get_distinct_values("software_product")
+        )
+        self.company_filter.configure(
+            values=["All"] + self.db.get_distinct_values("company_info")
+        )
 
         for widget in self.leads_scroll.winfo_children():
             widget.destroy()
+
+        # Soft cap on rendered rows. CustomTkinter on top of Tk slows
+        # noticeably above a few hundred widgets, so we render at most
+        # this many and show a hint to use filters/search. The DB still
+        # holds all leads; this only affects what's visible at once.
+        MAX_VISIBLE_LEADS = 200
+        total_leads = len(leads)
+        truncated = total_leads > MAX_VISIBLE_LEADS
+        if truncated:
+            leads = leads[:MAX_VISIBLE_LEADS]
+            ctk.CTkLabel(
+                self.leads_scroll,
+                text=(
+                    f"Showing first {MAX_VISIBLE_LEADS} of {total_leads}. "
+                    "Use filters or search to narrow the list."
+                ),
+                font=ctk.CTkFont(size=11),
+                text_color="#eab308",
+            ).pack(pady=(8, 4))
 
         for lead in leads:
             row = ctk.CTkFrame(self.leads_scroll, cursor="hand2")

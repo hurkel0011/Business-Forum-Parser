@@ -201,6 +201,32 @@ class Database:
         rows = self.conn.execute(query, params).fetchall()
         return [dict(r) for r in rows]
 
+    # Whitelist of columns the GUI is allowed to populate dropdowns from.
+    # Restricts the dynamic column name to known values to prevent any
+    # accidental SQL injection if a future caller does the wrong thing.
+    _FILTER_COLUMNS = {
+        "source", "severity", "category", "difficulty",
+        "software_product", "company_info", "status",
+        "revenue_potential",
+    }
+
+    def get_distinct_values(self, column: str) -> list[str]:
+        """Return sorted unique non-empty values from a given column.
+
+        Used by the GUI to populate filter dropdowns. Much cheaper than
+        reading all leads and deduping in Python — the indexed query
+        runs entirely in SQLite.
+        """
+        if column not in self._FILTER_COLUMNS:
+            raise ValueError(f"Column '{column}' not in filterable whitelist")
+        rows = self.conn.execute(
+            f"SELECT DISTINCT {column} FROM leads "
+            f"WHERE {column} IS NOT NULL AND {column} != '' "
+            f"AND {column} != 'unknown' "
+            f"ORDER BY {column}"
+        ).fetchall()
+        return [r[column] for r in rows]
+
     def update_lead_status(
         self,
         lead_id: int,
