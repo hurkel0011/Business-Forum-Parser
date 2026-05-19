@@ -1,6 +1,8 @@
 import csv
 import threading
 import webbrowser
+from typing import Optional
+
 import customtkinter as ctk
 from tkinter import filedialog
 from ..outreach import OutreachGenerator
@@ -218,6 +220,11 @@ class LeadsFrame(ctk.CTkFrame):
 
         self._current_url = None
         self._current_lead = None
+        # Tracks the lead_id of an in-flight outreach generation, if any.
+        # Used to (1) prevent duplicate generations on rapid clicks and
+        # (2) discard results that came back for a lead the user has
+        # since navigated away from.
+        self._outreach_in_flight_for: Optional[int] = None
 
     def _clear_search(self):
         self.search_entry.delete(0, "end")
@@ -366,7 +373,14 @@ class LeadsFrame(ctk.CTkFrame):
         self._current_lead = lead
         self.open_url_btn.configure(state="normal" if self._current_url else "disabled")
         self.copy_url_btn.configure(state="normal" if self._current_url else "disabled")
-        self.outreach_btn.configure(state="normal")
+        # If outreach is currently generating for this same lead, leave the
+        # button in its 'Generating...' state. Otherwise reset it so the
+        # text is always correct (was a UX bug: switching leads mid-generation
+        # left the button labeled 'Generating...' even though it was active).
+        if self._outreach_in_flight_for == lead.get("id"):
+            self.outreach_btn.configure(state="disabled", text="Generating...")
+        else:
+            self.outreach_btn.configure(state="normal", text="Generate Outreach")
         self.delete_btn.configure(state="normal")
 
         # Populate status + notes editor
@@ -493,6 +507,12 @@ class LeadsFrame(ctk.CTkFrame):
     def _generate_outreach(self):
         if not self._current_lead:
             return
+        # Prevent a second click while one generation is already running
+        # for any lead — without this guard, rapid clicks (or switching
+        # leads + clicking again) would spawn parallel API calls and end
+        # up showing two popups out of order.
+        if self._outreach_in_flight_for is not None:
+            return
         api_key = self.config.get("anthropic_api_key")
         if not api_key:
             self._show_outreach_error("Set your Anthropic API key in Settings first.")
@@ -500,14 +520,25 @@ class LeadsFrame(ctk.CTkFrame):
 
         self.outreach_btn.configure(state="disabled", text="Generating...")
         lead = self._current_lead
+        lead_id = lead.get("id")
+        self._outreach_in_flight_for = lead_id
+
+        def _on_done(result):
+            # Always clear the in-flight marker so future clicks work
+            self._outreach_in_flight_for = None
+            # Show popup for the lead we generated for (NOT necessarily
+            # the currently-selected lead — user may have moved on)
+            self._show_outreach_popup(lead, result)
+            # Only restore the button if the user is still on this lead.
+            # If they moved to a different lead, _show_detail already
+            # set the correct button state.
+            if self._current_lead and self._current_lead.get("id") == lead_id:
+                self.outreach_btn.configure(state="normal", text="Generate Outreach")
 
         def _run():
             generator = OutreachGenerator(api_key)
             result = generator.generate(lead)
-            self.after(0, lambda: self._show_outreach_popup(lead, result))
-            self.after(0, lambda: self.outreach_btn.configure(
-                state="normal", text="Generate Outreach"
-            ))
+            self.after(0, lambda r=result: _on_done(r))
 
         threading.Thread(target=_run, daemon=True).start()
 
