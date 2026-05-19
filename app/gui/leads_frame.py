@@ -225,6 +225,11 @@ class LeadsFrame(ctk.CTkFrame):
         # (2) discard results that came back for a lead the user has
         # since navigated away from.
         self._outreach_in_flight_for: Optional[int] = None
+        # Cache the OutreachGenerator across calls so we keep its
+        # model probe result + Sonnet's prompt cache warm. Re-created
+        # automatically when the API key in config changes.
+        self._outreach_generator: Optional[OutreachGenerator] = None
+        self._outreach_generator_key: str = ""
 
     def _clear_search(self):
         self.search_entry.delete(0, "end")
@@ -551,8 +556,14 @@ class LeadsFrame(ctk.CTkFrame):
                 self.outreach_btn.configure(state="normal", text="Generate Outreach")
 
         def _run():
-            generator = OutreachGenerator(api_key)
-            result = generator.generate(lead)
+            # Cached generator: skips the per-call model probe (~1s) and
+            # keeps Sonnet's prompt cache warm across multiple outreach
+            # generations in the same session.
+            if (self._outreach_generator is None
+                    or self._outreach_generator_key != api_key):
+                self._outreach_generator = OutreachGenerator(api_key)
+                self._outreach_generator_key = api_key
+            result = self._outreach_generator.generate(lead)
             self.after(0, lambda r=result: _on_done(r))
 
         threading.Thread(target=_run, daemon=True).start()
