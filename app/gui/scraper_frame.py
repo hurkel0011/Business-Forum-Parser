@@ -160,34 +160,13 @@ class ScraperFrame(ctk.CTkFrame):
     def _ui(self, func):
         self.after(0, func)
 
+    # _normalize_url is kept as a static method alias for backward
+    # compatibility (callers in this file). Real implementation lives in
+    # app.pipeline_utils for unit-testability and CLI reuse.
     @staticmethod
     def _normalize_url(url):
-        """Normalize URL for cross-scraper deduplication.
-
-        Handles common variants that scrapers may return for the same post:
-        - Reddit subdomains: www.reddit.com / old.reddit.com / np.reddit.com
-        - Trailing slashes
-        - URL fragments (#comment-123) and tracking query strings
-        - Mixed case in hostname
-        """
-        if not url:
-            return ""
-        url = url.strip().lower()
-        # Drop fragment and query string
-        for sep in ("#", "?"):
-            if sep in url:
-                url = url.split(sep, 1)[0]
-        # Drop trailing slash
-        url = url.rstrip("/")
-        # Normalize reddit subdomains to www.
-        for variant in ("old.reddit.com", "np.reddit.com",
-                        "i.reddit.com", "m.reddit.com"):
-            if variant in url:
-                url = url.replace(variant, "www.reddit.com")
-        # Normalize bare reddit.com → www.reddit.com
-        if "://reddit.com/" in url:
-            url = url.replace("://reddit.com/", "://www.reddit.com/")
-        return url
+        from ..pipeline_utils import normalize_url
+        return normalize_url(url)
 
     def _save_source_toggle(self, key, var):
         """Persist a single toggle state to config so it survives restart."""
@@ -285,57 +264,10 @@ class ScraperFrame(ctk.CTkFrame):
 
             self._ui(lambda n=len(all_posts): self._log(f"\n  Total scraped: {n} posts"))
 
-            # Cross-scraper dedup by URL and fuzzy title
-            # Common title decorations that scrapers/search engines append —
-            # stripped before fuzzy matching so the same post titled
-            # 'Foo - Reddit' and 'Foo - r/sysadmin' becomes the same key.
-            _TITLE_SUFFIXES = [
-                " - reddit", " : r/", " on reddit",
-                " | atlassian", " - atlassian",
-                " - hubspot", " | hubspot", " - hubspot community",
-                " - stack overflow", " - stackoverflow",
-                " - github", " · github", " · issue", " - issue",
-                " - shopify community", " | shopify",
-                " - woocommerce", " | woocommerce",
-                " - wordpress", " | wordpress.org",
-                " - dev community", " - dev.to",
-                " - spiceworks", " - quora",
-                " - microsoft community", " | techcommunity",
-                " - airtable community", " - zapier community",
-                " - notion", " - clickup", " - asana",
-                " - trustpilot", " - g2.com", " - capterra",
-                " - apple developer", " - apple community",
-                " - bigcommerce community",
-            ]
-            # Common "[SOLVED]" / "[FIXED]" prefix variants — strip so we match
-            # the same post with and without the resolution tag
-            _TITLE_PREFIXES = ("[solved]", "[fixed]", "[resolved]", "[help]",
-                               "solved:", "fixed:", "resolved:", "help:")
-            seen_urls = set()
-            seen_titles = set()
-            deduped = []
-            for p in all_posts:
-                url_key = self._normalize_url(p.get("url", ""))
-                title_raw = p.get("title", "").lower().strip()
-                # Strip status prefixes
-                for prefix in _TITLE_PREFIXES:
-                    if title_raw.startswith(prefix):
-                        title_raw = title_raw[len(prefix):].strip()
-                        break
-                # Strip source suffixes
-                for suffix in _TITLE_SUFFIXES:
-                    if suffix in title_raw:
-                        title_raw = title_raw[:title_raw.index(suffix)]
-                title_key = title_raw[:50]
-
-                if url_key in seen_urls or (title_key and title_key in seen_titles):
-                    continue
-                seen_urls.add(url_key)
-                if title_key:
-                    seen_titles.add(title_key)
-                deduped.append(p)
-
-            dupes_removed = len(all_posts) - len(deduped)
+            # Cross-scraper dedup by normalized URL and fuzzy title.
+            # Logic extracted to app.pipeline_utils for testability.
+            from ..pipeline_utils import dedup_cross_scraper
+            deduped, dupes_removed = dedup_cross_scraper(all_posts)
             if dupes_removed > 0:
                 self._ui(lambda d=dupes_removed: self._log(
                     f"  Removed {d} cross-scraper duplicates"

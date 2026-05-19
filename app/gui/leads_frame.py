@@ -261,18 +261,13 @@ class LeadsFrame(ctk.CTkFrame):
     def refresh(self):
         leads = self.db.get_leads(self._build_filters())
 
-        # Client-side search across title + content + summary + notes
-        # Done in Python instead of SQL so we can search multiple fields
-        # at once without complicating the get_leads filter API
-        search_query = self.search_entry.get().strip().lower()
+        # Client-side keyword search across title/content/summary/solution/notes.
+        # Predicate extracted to app.pipeline_utils.search_lead_text so the
+        # same logic powers filtered CSV export (below).
+        from ..pipeline_utils import search_lead_text
+        search_query = self.search_entry.get().strip()
         if search_query:
-            def _matches(lead):
-                for field in ("title", "content", "summary", "solution_approach", "notes"):
-                    val = lead.get(field) or ""
-                    if search_query in val.lower():
-                        return True
-                return False
-            leads = [l for l in leads if _matches(l)]
+            leads = [l for l in leads if search_lead_text(l, search_query)]
 
         all_leads = self.db.get_leads()
         sources = sorted(set(l["source"] for l in all_leads if l["source"]))
@@ -649,16 +644,11 @@ class LeadsFrame(ctk.CTkFrame):
         # Export respects the active filters AND the search box so users
         # can export just 'new' leads, or only leads matching a keyword,
         # etc. Previously this always dumped all leads regardless of UI state.
+        from ..pipeline_utils import search_lead_text
         leads = self.db.get_leads(self._build_filters())
-        search_query = self.search_entry.get().strip().lower()
+        search_query = self.search_entry.get().strip()
         if search_query:
-            def _matches(lead):
-                for field in ("title", "content", "summary", "solution_approach", "notes"):
-                    val = lead.get(field) or ""
-                    if search_query in val.lower():
-                        return True
-                return False
-            leads = [l for l in leads if _matches(l)]
+            leads = [l for l in leads if search_lead_text(l, search_query)]
 
         if not leads:
             return
