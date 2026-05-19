@@ -149,7 +149,11 @@ class Database:
         self.conn.commit()
         return cursor.lastrowid
 
-    def get_leads(self, filters: Optional[dict] = None) -> list[dict]:
+    def get_leads(
+        self,
+        filters: Optional[dict] = None,
+        limit: Optional[int] = None,
+    ) -> list[dict]:
         query = "SELECT * FROM leads"
         params = []
         conditions = []
@@ -194,6 +198,12 @@ class Database:
             query += " ORDER BY created_at DESC, lead_score DESC"
         else:
             query += " ORDER BY lead_score DESC, created_at DESC"
+
+        # Optional LIMIT — the dashboard wants the top 20; without this it
+        # would pull every row and slice in Python, which doesn't scale.
+        if limit is not None and limit > 0:
+            query += " LIMIT ?"
+            params.append(int(limit))
 
         # Return dicts (not sqlite3.Row) so callers can use .get() with defaults.
         # sqlite3.Row supports indexing but raises IndexError on missing keys,

@@ -120,8 +120,10 @@ class DashboardFrame(ctk.CTkFrame):
         for widget in self.recent_frame.winfo_children():
             widget.destroy()
 
-        leads = self.db.get_leads()
-        for lead in leads[:20]:
+        # Push the LIMIT down to SQL instead of slicing in Python —
+        # at 1000+ leads, slicing pulls every row first which is wasteful.
+        leads = self.db.get_leads(limit=20)
+        for lead in leads:
             lead_row = ctk.CTkFrame(self.recent_frame)
             lead_row.pack(fill="x", padx=3, pady=1)
             lead_row.grid_columnconfigure(2, weight=1)
