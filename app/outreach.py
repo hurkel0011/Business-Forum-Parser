@@ -1,5 +1,14 @@
+"""Outreach message generator — turns a classified lead into 4 message
+formats (Reddit reply, LinkedIn DM, email subject+body, opener).
+
+Uses Anthropic's API with prompt caching. The SYSTEM_PROMPT is intentionally
+sized over 1024 tokens so Sonnet 4.5 caches it, making repeated outreach
+generation in a session ~90% cheaper on input tokens.
+"""
 import json
 import time
+from typing import Callable, Optional
+
 from anthropic import Anthropic
 
 # Outreach generator — Business Forum Parser by Howell Brady
@@ -114,16 +123,20 @@ MODELS = [
 
 
 class OutreachGenerator:
-    def __init__(self, api_key, error_callback=None):
+    def __init__(
+        self,
+        api_key: str,
+        error_callback: Optional[Callable[[str], None]] = None,
+    ) -> None:
         self.client = Anthropic(api_key=api_key)
         self.error_callback = error_callback
-        self.model = None
+        self.model: Optional[str] = None
 
-    def _report(self, msg):
+    def _report(self, msg: str) -> None:
         if self.error_callback:
             self.error_callback(msg)
 
-    def _find_working_model(self):
+    def _find_working_model(self) -> Optional[str]:
         for model in MODELS:
             try:
                 resp = self.client.messages.create(
@@ -137,8 +150,15 @@ class OutreachGenerator:
                 continue
         return None
 
-    def generate(self, lead):
-        """Generate outreach messages for a lead. Returns dict with linkedin_message, email_subject, email_body, suggested_opener."""
+    def generate(self, lead: dict) -> dict:
+        """Generate outreach messages for a classified lead.
+
+        Returns a dict with 5 string keys: reddit_reply (empty for non-Reddit
+        sources), linkedin_message, email_subject, email_body, suggested_opener.
+
+        On API failure / parse error falls back to a basic template so the
+        caller always gets the expected schema.
+        """
         if self.model is None:
             self.model = self._find_working_model()
             if self.model is None:
@@ -205,7 +225,7 @@ class OutreachGenerator:
 
         return self._fallback(lead)
 
-    def _fallback(self, lead):
+    def _fallback(self, lead: dict) -> dict:
         """Generate a basic template if API fails."""
         title = lead.get("title", "your post")
         source = lead.get("source", "online")

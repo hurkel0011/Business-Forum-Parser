@@ -1,5 +1,15 @@
+"""Lead classifier — runs the Anthropic API on each candidate post and
+returns a structured business-opportunity assessment.
+
+Uses prompt caching: the SYSTEM_PROMPT is sized over 1024 tokens so Sonnet
+4.5 caches it (Haiku 4.5 silently ignores cache_control). After the first
+classify call in a session, subsequent calls drop from ~3200 input tokens
+to ~28 — making batch classification ~90% cheaper.
+"""
 import json
 import time
+from typing import Callable, Optional
+
 from anthropic import Anthropic
 
 # Build identity — proof of original authorship
@@ -276,10 +286,14 @@ MODELS = [
 
 
 class LeadClassifier:
-    def __init__(self, api_key, error_callback=None):
+    def __init__(
+        self,
+        api_key: str,
+        error_callback: Optional[Callable[[str], None]] = None,
+    ) -> None:
         self.client = Anthropic(api_key=api_key)
         self.error_callback = error_callback
-        self.model = None
+        self.model: Optional[str] = None
         self._errors = 0
         # Track cache performance for cost monitoring
         self._cache_hits = 0
@@ -301,7 +315,7 @@ class LeadClassifier:
             self.error_callback(msg)
 
     @staticmethod
-    def _smart_truncate(content, max_len):
+    def _smart_truncate(content: str, max_len: int) -> str:
         """Extract the most relevant paragraphs instead of blind truncation.
 
         Prioritizes paragraphs that contain pain signals, error messages, or
@@ -340,6 +354,14 @@ class LeadClassifier:
         # Re-sort by original position for readability
         selected.sort(key=lambda x: x[0])
 
+        # If no paragraph fit (single huge paragraph > max_len), fall back to
+        # truncating the highest-scored paragraph. Previously this returned
+        # an empty string, which silently lost the entire content of long
+        # single-paragraph posts.
+        if not selected:
+            best_para = scored[0][2]  # highest-scored after sort
+            return best_para[:max_len]
+
         return "\n".join(p for _, p in selected)
 
     def _find_working_model(self):
@@ -359,7 +381,7 @@ class LeadClassifier:
                 continue
         return None
 
-    def classify(self, post):
+    def classify(self, post: dict) -> dict:
         if self.model is None:
             self.model = self._find_working_model()
             if self.model is None:
@@ -482,7 +504,7 @@ class LeadClassifier:
 
         return self._fallback("Max retries reached")
 
-    def get_cache_stats(self):
+    def get_cache_stats(self) -> dict:
         """Return prompt cache stats for cost monitoring."""
         total = self._cache_hits + self._cache_misses
         hit_rate = (self._cache_hits / total) if total > 0 else 0
@@ -501,7 +523,7 @@ class LeadClassifier:
     _VALID_DIFFICULTY = {"quick_fix", "moderate", "complex", "major_project"}
     _VALID_REVENUE = {"low", "medium", "high", "premium"}
 
-    def _normalize_result(self, result):
+    def _normalize_result(self, result: dict) -> dict:
         """Coerce LLM output into expected types/ranges.
 
         The model occasionally returns lead_score as a string ("8" instead
@@ -551,7 +573,7 @@ class LeadClassifier:
 
         return normalized
 
-    def _fallback(self, reason):
+    def _fallback(self, reason: str) -> dict:
         return {
             "severity": "unknown",
             "fixability_score": 0,
