@@ -301,13 +301,20 @@ class LeadClassifier:
         self._total_input_tokens = 0
         self._cached_input_tokens = 0
 
-    # Pain signal words for smart content truncation
+    # Pain signal words used by _smart_truncate to score paragraph
+    # relevance when content exceeds the classifier's input budget.
+    # Aligned with the prescorer's high-weight signals so the truncated
+    # content most likely to make the classifier produce a useful result.
     _PAIN_WORDS = {
-        "error", "broken", "broken", "failed", "failing", "crash",
+        # Original set (had a duplicate 'broken' — fixed)
+        "error", "broken", "failed", "failing", "crash",
         "bug", "issue", "problem", "help", "frustrated", "urgent",
         "blocked", "stuck", "not working", "doesn't work", "stopped",
         "integration", "api", "webhook", "sync", "migrate", "migration",
         "workaround", "fix", "desperate", "losing", "money", "pay",
+        # Aligned with new prescorer signals (v1.8.1)
+        "deadline", "support", "vendor", "production",
+        "willing to pay", "hire", "freelance",
     }
 
     def _report(self, msg):
