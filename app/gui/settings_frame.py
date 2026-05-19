@@ -2,6 +2,9 @@ import customtkinter as ctk
 
 
 class SettingsFrame(ctk.CTkFrame):
+    """Settings tab — API keys (with Test button), keywords, min_score,
+    plus a one-click DB backup. Saves on Save button or Enter key."""
+
     def __init__(self, parent, db, config):
         super().__init__(parent, fg_color="transparent")
         self.db = db

@@ -48,6 +48,10 @@ from ..classifier import LeadClassifier
 
 
 class ScraperFrame(ctk.CTkFrame):
+    """Tab where the user toggles sources, kicks off a pipeline run, and
+    watches the log. The actual scraping happens on a background thread
+    so the UI stays responsive."""
+
     def __init__(self, parent, db, config):
         super().__init__(parent, fg_color="transparent")
         self.db = db

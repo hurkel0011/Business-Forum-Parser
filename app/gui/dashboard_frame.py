@@ -2,6 +2,10 @@ import customtkinter as ctk
 
 
 class DashboardFrame(ctk.CTkFrame):
+    """Home tab with stat cards (totals, high-value, quick wins, etc.),
+    recent leads list, and breakdowns by difficulty/software/revenue/
+    company. Refreshes on tab activation or via the Refresh button."""
+
     def __init__(self, parent, db, config):
         super().__init__(parent, fg_color="transparent")
         self.db = db

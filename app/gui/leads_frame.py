@@ -7,6 +7,10 @@ from ..outreach import OutreachGenerator
 
 
 class LeadsFrame(ctk.CTkFrame):
+    """Lead management tab: search, filter, sort, view details, generate
+    outreach, edit status/notes, export CSV. The detail panel updates
+    when the user clicks a row in the leads list."""
+
     def __init__(self, parent, db, config):
         super().__init__(parent, fg_color="transparent")
         self.db = db
