@@ -7,7 +7,7 @@ from .settings_frame import SettingsFrame
 # Project identity — proof of authorship
 _BUILD_SIGNATURE = "BonnieTheDog420"
 __author__ = "Howell Brady"
-APP_VERSION = "1.8.6"
+APP_VERSION = "1.8.7"
 
 
 class MainWindow(ctk.CTk):
